@@ -70,9 +70,11 @@ is queued for the user's return.
 - [x] Wallpaper oversized-image guard: pure src/image_dims.* header probe (PNG/
       BMP/JPEG) + 14 host tests + background.cpp skips images over a 1.2M-px
       budget (never OOM). Firmware build verified. (commit 9205bc7)
-- [ ] Evil-twin / rogue-AP decision logic: pure host-tested module (Phase 4 blue).
+- [x] Evil-twin / rogue-AP decision logic: pure src/detect/evil_twin.* + 12 host
+      tests. Firmware build verified. (commit ccc4eb4)
+- [ ] Tail-detection / anti-stalking classifier: pure src/detect/tail_detect.*
+      (familiarity learning + cross-cell escalation + decay) + host tests.
       IN PROGRESS.
-- [ ] (stretch) Tail-detection classification module + tests.
 
 ## PENDING HARDWARE FLASH (needs user present to verify boot)
 - Wallpaper oversized-image guard (commit 9205bc7): flash once, then drop a
