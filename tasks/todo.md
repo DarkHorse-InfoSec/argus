@@ -75,28 +75,38 @@ is queued for the user's return.
 - [x] Tail-detection / anti-stalking classifier: pure src/detect/tail_detect.*
       (familiarity learning + cross-cell escalation + decay) + 13 host tests.
       Firmware build verified. (commit 50dfaa4)
+- [x] Auto-create /backgrounds folder + README on SD so the wallpaper drop-in
+      folder is discoverable (was: "no backgrounds folder"). (commit 6005ef9)
+- [x] Deauth/disassoc flood detector: pure src/detect/deauth_flood.* (per-BSSID
+      + global sliding window) + 9 host tests. Build verified. (commit 57d7bd5)
+- [ ] BLE-spam / adv-flood detector: pure src/detect/ble_spam.* (composes with
+      src/ble adv parser; Flipper/BLE-spam signature) + host tests. IN PROGRESS.
+- [ ] Threat-state aggregator: pure module combining all detector verdicts into
+      one posture (calm/watch/alert/critical) to drive the HADES-red accent +
+      HexHound. NEXT — this is the glue that makes integration turnkey.
 
-Autonomous batch complete. Host suite is now 62 tests / 314 checks, all green
-(bash test/run.sh). Stopped here deliberately: 4 pure modules are built + tested
-but UNWIRED; further value is integration (below), which needs hardware + you.
+Approach (per feedback [[feedback-keep-building-when-afk]]): keep producing
+host-tested/additive work while AFK; do NOT idle waiting on integration. No
+experimental flashing without the user present.
 
 ## ON YOUR RETURN — briefing
-1. FLASH once and verify (the only pending on-device change):
-   - Wallpaper OOM guard (commit 9205bc7). Test: drop a normal-size image at
-     /backgrounds/wallpaper.png (loads faint) AND a deliberately huge multi-MP
-     photo (should be SKIPPED with a "[background] skipping oversized wallpaper"
-     serial line, NOT crash). The clock ghost fix (d31e7a8) is already flashed +
-     you confirmed it.
-2. INTEGRATION (each is a separate, hardware-gated step — wire one, flash, verify
-   on-device before the next; do NOT batch-wire them blind):
-   - BLE adv parser (src/ble) -> refactor airtag/flipper/skimmer detectors to use
-     the one tested parser instead of re-walking raw bytes.
-   - Evil-twin (src/detect/evil_twin) -> feed from the wifi beacon manager; map
-     esp_wifi auth constants to AuthMode; surface a HADES-red threat cue.
-   - Tail-detect (src/detect/tail_detect) -> feed device sightings from BLE/wifi
-     scans keyed by a GPS coarse cell; drive an anti-stalking alert + HexHound.
-   All three map cleanly onto existing on-device types (WifiBeacon, WifiBeacon
-   auth string, GNSS cell) — see each module's header notes.
+1. FLASH once and verify boot + features (pending on-device changes bundled):
+   - Wallpaper OOM guard (9205bc7) + auto-create /backgrounds (6005ef9). The
+     /backgrounds folder + README should appear on the card; a normal image
+     loads faint; a deliberately huge multi-MP photo is SKIPPED with a
+     "[background] skipping oversized wallpaper" serial line, NOT a crash.
+     NOTE: 6005ef9 adds SD writes on the BOOT path — watch it boot clean.
+   - Clock ghost fix (d31e7a8) already flashed + you confirmed it.
+2. INTEGRATION (each a separate, hardware-gated step — wire one, flash, verify
+   before the next; do NOT batch-wire blind). All modules map onto existing
+   on-device types; see each header's notes:
+   - BLE adv parser (src/ble) -> refactor airtag/flipper/skimmer detectors.
+   - Evil-twin (src/detect/evil_twin) -> feed from wifi_beacon_manager.
+   - Tail-detect (src/detect/tail_detect) -> feed BLE/wifi sightings + GNSS cell.
+   - Deauth-flood (src/detect/deauth_flood) -> feed the promiscuous mgmt-frame
+     path in wifi_beacon_manager (subtype 0xC/0xA, addr3).
+   - BLE-spam (src/detect/ble_spam) -> feed from ble_scan_manager adv results.
+   - Threat aggregator -> consumes the above, drives argus_accent() + HexHound.
 
 ## Session commits (darkhorse-argus, LOCAL only, none pushed)
 - d31e7a8 fix(clock) stale-pixel ghosting  [FLASHED + user-confirmed]
