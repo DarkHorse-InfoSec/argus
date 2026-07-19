@@ -96,8 +96,29 @@ step-by-step (hardware-gated) integration guide.
 Approach (per feedback [[feedback-keep-building-when-afk]]): keep producing
 host-tested/additive work while AFK; do NOT idle waiting on integration. No
 experimental flashing without the user present.
-- [ ] NEXT: WiFi beacon-flood / fake-AP-spam detector (symmetric to ble_spam;
-      detects SSID flooding / mass fake-AP beacons). IN PROGRESS.
+- [x] WiFi beacon-flood / fake-AP-spam detector: src/detect/beacon_flood.* + 9
+      tests, wired into aggregator as ThreatDomain::BeaconFlood. (570afd3, 4c8205a)
+- [x] Coarse GPS-to-cell quantizer src/geo_cell.* (~120 m, configurable) so
+      tail_detect has real cell ids + 8 tests. (commit 0d60d4d)
+- [ ] Unwanted-tracker (AirTag / Find My) identification helper
+      src/detect/tracker_ident.* (composes with ble adv parser; classifies
+      separated-owner vs owner-nearby) - the payload half of anti-stalking; the
+      follow half reuses tail_detect fed FindMy sightings under ThreatDomain::
+      Airtag. IN PROGRESS. (parent to wire the Airtag mapping after.)
+
+## Full module inventory (all pure, host-tested, firmware-compiling; UNWIRED)
+  src/ble/adv_parser         BLE AD (TLV) parser
+  src/image_dims             image header dimension probe (wallpaper guard)
+  src/geo_cell               GPS lat/lon -> coarse cell id
+  src/detect/evil_twin       rogue-AP / evil-twin            -> RogueAp
+  src/detect/tail_detect     anti-stalking follow            -> Tail (+ Airtag via FindMy filter)
+  src/detect/deauth_flood    deauth/disassoc flood           -> DeauthFlood
+  src/detect/ble_spam        BLE-spam flood                  -> BleSpam
+  src/detect/beacon_flood    WiFi beacon-flood               -> BeaconFlood
+  src/detect/tracker_ident   AirTag/FindMy ident (in prog)   -> Airtag
+  src/detect/threat_map      verdict -> Severity + feed()
+  src/detect/threat_state    aggregator -> ThreatLevel
+See src/detect/README.md for data flow + the hardware-gated integration guide.
 
 ## ON YOUR RETURN — briefing
 1. FLASH once and verify boot + features (pending on-device changes bundled):
