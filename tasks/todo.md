@@ -67,16 +67,20 @@ RULE: no experimental hardware flashing without the user present to confirm boot
 (two boot loops earlier). Work below is build + host-test + commit only; flashing
 is queued for the user's return.
 - [x] Shared BLE advertisement parser src/ble/ + 17 host tests (commit 0c077a0)
-- [ ] Wallpaper oversized-image guard: pure src/image_dims.* header probe +
-      host tests + wire into background.cpp to skip images over a pixel budget
-      (never OOM). IN PROGRESS.
+- [x] Wallpaper oversized-image guard: pure src/image_dims.* header probe (PNG/
+      BMP/JPEG) + 14 host tests + background.cpp skips images over a 1.2M-px
+      budget (never OOM). Firmware build verified. (commit 9205bc7)
 - [ ] Evil-twin / rogue-AP decision logic: pure host-tested module (Phase 4 blue).
+      IN PROGRESS.
 - [ ] (stretch) Tail-detection classification module + tests.
 
 ## PENDING HARDWARE FLASH (needs user present to verify boot)
-- Wallpaper oversized-image guard (once built + committed this session).
-- Any later module only matters on-device once integrated; extraction + tests
-  land first, integration is a separate hardware-gated step.
+- Wallpaper oversized-image guard (commit 9205bc7): flash once, then drop a
+  normal image (loads faint) and a deliberately huge one (should be skipped,
+  logged on serial, NOT crash). This is the only pending-flash item so far.
+- Later pure modules (evil-twin etc.) are host-tested and compile into the
+  build but are not wired into the UI/scan yet, so they change no on-device
+  behavior; their integration is a separate hardware-gated step.
 
 ## Known transients (self-recovered, not chased)
 - First-boot matrix / stale-artifact rendering glitches — did not reproduce.
