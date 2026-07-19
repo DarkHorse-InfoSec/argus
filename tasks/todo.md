@@ -72,9 +72,38 @@ is queued for the user's return.
       budget (never OOM). Firmware build verified. (commit 9205bc7)
 - [x] Evil-twin / rogue-AP decision logic: pure src/detect/evil_twin.* + 12 host
       tests. Firmware build verified. (commit ccc4eb4)
-- [ ] Tail-detection / anti-stalking classifier: pure src/detect/tail_detect.*
-      (familiarity learning + cross-cell escalation + decay) + host tests.
-      IN PROGRESS.
+- [x] Tail-detection / anti-stalking classifier: pure src/detect/tail_detect.*
+      (familiarity learning + cross-cell escalation + decay) + 13 host tests.
+      Firmware build verified. (commit 50dfaa4)
+
+Autonomous batch complete. Host suite is now 62 tests / 314 checks, all green
+(bash test/run.sh). Stopped here deliberately: 4 pure modules are built + tested
+but UNWIRED; further value is integration (below), which needs hardware + you.
+
+## ON YOUR RETURN — briefing
+1. FLASH once and verify (the only pending on-device change):
+   - Wallpaper OOM guard (commit 9205bc7). Test: drop a normal-size image at
+     /backgrounds/wallpaper.png (loads faint) AND a deliberately huge multi-MP
+     photo (should be SKIPPED with a "[background] skipping oversized wallpaper"
+     serial line, NOT crash). The clock ghost fix (d31e7a8) is already flashed +
+     you confirmed it.
+2. INTEGRATION (each is a separate, hardware-gated step — wire one, flash, verify
+   on-device before the next; do NOT batch-wire them blind):
+   - BLE adv parser (src/ble) -> refactor airtag/flipper/skimmer detectors to use
+     the one tested parser instead of re-walking raw bytes.
+   - Evil-twin (src/detect/evil_twin) -> feed from the wifi beacon manager; map
+     esp_wifi auth constants to AuthMode; surface a HADES-red threat cue.
+   - Tail-detect (src/detect/tail_detect) -> feed device sightings from BLE/wifi
+     scans keyed by a GPS coarse cell; drive an anti-stalking alert + HexHound.
+   All three map cleanly onto existing on-device types (WifiBeacon, WifiBeacon
+   auth string, GNSS cell) — see each module's header notes.
+
+## Session commits (darkhorse-argus, LOCAL only, none pushed)
+- d31e7a8 fix(clock) stale-pixel ghosting  [FLASHED + user-confirmed]
+- 0c077a0 feat(ble) advertisement parser + tests
+- 9205bc7 feat(background) oversized-image OOM guard + tests  [PENDING FLASH]
+- ccc4eb4 feat(detect) evil-twin / rogue-AP logic + tests
+- 50dfaa4 feat(detect) tail-detection / anti-stalking + tests
 
 ## PENDING HARDWARE FLASH (needs user present to verify boot)
 - Wallpaper oversized-image guard (commit 9205bc7): flash once, then drop a
