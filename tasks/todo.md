@@ -121,8 +121,11 @@ reboot -> should return AND boot clean (LoRa brings the SX1262 fully live at boo
   detect/: evil_twin->RogueAp  tail_detect->Tail  deauth_flood->DeauthFlood
            ble_spam->BleSpam  beacon_flood->BeaconFlood  tracker_ident->Airtag
            threat_map (verdict->Severity)  threat_state (->ThreatLevel)  threat_log (history)
-Host suite: 138 tests / 1312 checks green. See src/detect/README.md for data flow
-+ the step-by-step integration guide.
+  test/test_subsystem_e2e  end-to-end composition proof (real inputs through the chain)
+Host suite: ~142 tests / 1541 checks green. See src/detect/README.md for data flow
++ the step-by-step integration guide. The e2e test already caught 2 real cross-
+module bugs (log all-domain polling; geo_cell must be non-negative) - extend it
+BEFORE wiring hardware integration; cheaper than a flash cycle.
 
 ## ON YOUR RETURN — briefing
 1. FLASH once + verify boot (bundled pending on-device changes):
