@@ -79,15 +79,25 @@ is queued for the user's return.
       folder is discoverable (was: "no backgrounds folder"). (commit 6005ef9)
 - [x] Deauth/disassoc flood detector: pure src/detect/deauth_flood.* (per-BSSID
       + global sliding window) + 9 host tests. Build verified. (commit 57d7bd5)
-- [ ] BLE-spam / adv-flood detector: pure src/detect/ble_spam.* (composes with
-      src/ble adv parser; Flipper/BLE-spam signature) + host tests. IN PROGRESS.
-- [ ] Threat-state aggregator: pure module combining all detector verdicts into
-      one posture (calm/watch/alert/critical) to drive the HADES-red accent +
-      HexHound. NEXT — this is the glue that makes integration turnkey.
+- [x] BLE-spam / adv-flood detector: pure src/detect/ble_spam.* (composes with
+      src/ble adv parser) + 9 host tests. Build verified. (commit dbf5be2)
+- [x] Threat-state aggregator: pure src/detect/threat_state.* - unified posture
+      (Calm/Watch/Alert/Critical) with rise/decay hysteresis + correlation
+      escalation + 14 host tests. Build verified. (commit 0186624)
+- [x] Detector->aggregator mapping layer: src/detect/threat_map.* (severity_of +
+      feed() per detector) + 8 host tests. Build verified. (commit a4dc0a2)
+- [x] Subsystem architecture + integration guide: src/detect/README.md.
+
+DETECTION SUBSYSTEM COMPLETE: parser -> 5 detectors -> map -> aggregator, all
+pure/host-tested/decoupled and compiling into the firmware. Host suite: 102
+tests / 944 checks green. See src/detect/README.md for the data flow + the
+step-by-step (hardware-gated) integration guide.
 
 Approach (per feedback [[feedback-keep-building-when-afk]]): keep producing
 host-tested/additive work while AFK; do NOT idle waiting on integration. No
 experimental flashing without the user present.
+- [ ] NEXT: WiFi beacon-flood / fake-AP-spam detector (symmetric to ble_spam;
+      detects SSID flooding / mass fake-AP beacons). IN PROGRESS.
 
 ## ON YOUR RETURN — briefing
 1. FLASH once and verify boot + features (pending on-device changes bundled):
