@@ -50,6 +50,34 @@ branding to the proven 13-37 base; cherry-pick Threat Radar (MIT) features.
 - Shared BLE AD-record parser (de-risks AirTag/Flipper/Skimmer at once)
 - Evil-Twin decision logic (stateful rogue-AP detection)
 
+## Rendering — clock stale-pixel ghosting — FIXED + flashed (commit d31e7a8)
+- Symptom: clock/date drawn multiple times (ghosted), plus stale Settings text
+  left in the lower half. Photographed with matrix OFF.
+- Root cause: the digital clock has a transform_scale (up to 1.5x, auto-fit).
+  Under LVGL partial-refresh a scaled label draws past the area a label-only
+  invalidate clears, so each second's redraw left the enlarged glyph rim behind.
+  The matrix rain masked it by repainting the background 8x/sec.
+- Fix: update_clock() now invalidates the whole clock_screen each tick (1 Hz
+  full repaint, trivial on this panel). USER-CONFIRMED FIXED with matrix off.
+- Holds with matrix ON (more repainting) and with wallpaper (composited fresh
+  each tick). Wallpaper OOM risk for oversized images is being hardened (below).
+
+## Autonomous session 2026-07-19 (user AFK) — host-testable / additive only
+RULE: no experimental hardware flashing without the user present to confirm boot
+(two boot loops earlier). Work below is build + host-test + commit only; flashing
+is queued for the user's return.
+- [x] Shared BLE advertisement parser src/ble/ + 17 host tests (commit 0c077a0)
+- [ ] Wallpaper oversized-image guard: pure src/image_dims.* header probe +
+      host tests + wire into background.cpp to skip images over a pixel budget
+      (never OOM). IN PROGRESS.
+- [ ] Evil-twin / rogue-AP decision logic: pure host-tested module (Phase 4 blue).
+- [ ] (stretch) Tail-detection classification module + tests.
+
+## PENDING HARDWARE FLASH (needs user present to verify boot)
+- Wallpaper oversized-image guard (once built + committed this session).
+- Any later module only matters on-device once integrated; extraction + tests
+  land first, integration is a separate hardware-gated step.
+
 ## Known transients (self-recovered, not chased)
 - First-boot matrix / stale-artifact rendering glitches — did not reproduce.
 - One first-boot restart loop at the clock — settled on its own next power-up.
