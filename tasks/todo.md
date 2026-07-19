@@ -100,44 +100,48 @@ experimental flashing without the user present.
       tests, wired into aggregator as ThreatDomain::BeaconFlood. (570afd3, 4c8205a)
 - [x] Coarse GPS-to-cell quantizer src/geo_cell.* (~120 m, configurable) so
       tail_detect has real cell ids + 8 tests. (commit 0d60d4d)
-- [ ] Unwanted-tracker (AirTag / Find My) identification helper
-      src/detect/tracker_ident.* (composes with ble adv parser; classifies
-      separated-owner vs owner-nearby) - the payload half of anti-stalking; the
-      follow half reuses tail_detect fed FindMy sightings under ThreatDomain::
-      Airtag. IN PROGRESS. (parent to wire the Airtag mapping after.)
+- [x] Unwanted-tracker (AirTag / Find My) ident src/detect/tracker_ident.* +
+      Airtag wiring (feed_tracker -> ThreatDomain::Airtag). (commit 669c8ca)
+- [x] Forensic threat log src/detect/threat_log.* (edge-recorded, 48-event ring,
+      SD-append documented) - Phase 4 blue-team. (commit c12ffb8)
 
-## Full module inventory (all pure, host-tested, firmware-compiling; UNWIRED)
-  src/ble/adv_parser         BLE AD (TLV) parser
-  src/image_dims             image header dimension probe (wallpaper guard)
-  src/geo_cell               GPS lat/lon -> coarse cell id
-  src/detect/evil_twin       rogue-AP / evil-twin            -> RogueAp
-  src/detect/tail_detect     anti-stalking follow            -> Tail (+ Airtag via FindMy filter)
-  src/detect/deauth_flood    deauth/disassoc flood           -> DeauthFlood
-  src/detect/ble_spam        BLE-spam flood                  -> BleSpam
-  src/detect/beacon_flood    WiFi beacon-flood               -> BeaconFlood
-  src/detect/tracker_ident   AirTag/FindMy ident (in prog)   -> Airtag
-  src/detect/threat_map      verdict -> Severity + feed()
-  src/detect/threat_state    aggregator -> ThreatLevel
-See src/detect/README.md for data flow + the hardware-gated integration guide.
+## Rendering - display FULL-refresh (commit 7c5a85b) - FLASHED + user-confirmed
+Flipped LilyGoLib LilyGo_Display(full_refresh=true) (Ultra already has full-screen
+PSRAM buffers, so zero extra memory). Kills the whole partial-refresh artifact
+class: clock jump under Matrix AND wallpaper, and Tools-scroll stale rows. Verified
+on-device: Matrix+clock stable, Tools smooth, wallpaper smooth.
+
+## Radio persistence (commit 602dc1c) - built, PENDING FLASH CHECK
+WiFi/NFC/LoRa power state now persists across reboot (GPS pattern, /Settings/*.txt).
+Bluetooth deliberately EXCLUDED (BLE-at-boot boot-looped). Verify: toggle each on ->
+reboot -> should return AND boot clean (LoRa brings the SX1262 fully live at boot).
+
+## Full module inventory (pure, host-tested; parser/detectors UNWIRED to scan loop)
+  src/ble/adv_parser  BLE AD parser | src/image_dims  wallpaper guard | src/geo_cell  GPS->cell
+  detect/: evil_twin->RogueAp  tail_detect->Tail  deauth_flood->DeauthFlood
+           ble_spam->BleSpam  beacon_flood->BeaconFlood  tracker_ident->Airtag
+           threat_map (verdict->Severity)  threat_state (->ThreatLevel)  threat_log (history)
+Host suite: 138 tests / 1312 checks green. See src/detect/README.md for data flow
++ the step-by-step integration guide.
 
 ## ON YOUR RETURN — briefing
-1. FLASH once and verify boot + features (pending on-device changes bundled):
-   - Wallpaper OOM guard (9205bc7) + auto-create /backgrounds (6005ef9). The
-     /backgrounds folder + README should appear on the card; a normal image
-     loads faint; a deliberately huge multi-MP photo is SKIPPED with a
-     "[background] skipping oversized wallpaper" serial line, NOT a crash.
-     NOTE: 6005ef9 adds SD writes on the BOOT path — watch it boot clean.
-   - Clock ghost fix (d31e7a8) already flashed + you confirmed it.
-2. INTEGRATION (each a separate, hardware-gated step — wire one, flash, verify
-   before the next; do NOT batch-wire blind). All modules map onto existing
-   on-device types; see each header's notes:
-   - BLE adv parser (src/ble) -> refactor airtag/flipper/skimmer detectors.
-   - Evil-twin (src/detect/evil_twin) -> feed from wifi_beacon_manager.
-   - Tail-detect (src/detect/tail_detect) -> feed BLE/wifi sightings + GNSS cell.
-   - Deauth-flood (src/detect/deauth_flood) -> feed the promiscuous mgmt-frame
-     path in wifi_beacon_manager (subtype 0xC/0xA, addr3).
-   - BLE-spam (src/detect/ble_spam) -> feed from ble_scan_manager adv results.
-   - Threat aggregator -> consumes the above, drives argus_accent() + HexHound.
+1. FLASH once + verify boot (bundled pending on-device changes):
+   - Radio persistence (602dc1c): toggle WiFi/NFC/LoRa on -> reboot -> return + clean boot.
+   NOTE: the watch currently runs the full-refresh build (7c5a85b, flashed +
+   confirmed) but NOT yet radio persistence / the latest modules - reflash to get them.
+   - Already flashed + confirmed this session: full-refresh (7c5a85b), wallpaper OOM
+     guard (9205bc7) + auto-/backgrounds (6005ef9), clock fix (d31e7a8).
+2. INTEGRATION (hardware-gated; wire one, flash, verify, then next - do NOT batch blind):
+   - BLE adv parser -> refactor airtag/flipper/skimmer detectors.
+   - evil_twin + beacon_flood -> feed from wifi_beacon_manager (beacon path).
+   - deauth_flood -> promiscuous mgmt-frame path (subtype 0xC/0xA, addr3).
+   - ble_spam + tracker_ident -> feed from ble_scan_manager adv results.
+   - tail_detect -> BLE/wifi sightings keyed by geo::coarse_cell(GNSS); tracker_ident
+     hits feed a 2nd TailDetector -> feed_tracker() (Airtag domain).
+   - threat_map::feed*() -> threat_state; drive argus_accent()+HexHound; threat_log
+     records escalations to /Settings/threat_log.txt.
+3. Open feature question: phone notifications over BLE (iPhone/ANCS first). Discussed;
+   sequence after integration since it leans on the BLE stack.
 
 ## Session commits (darkhorse-argus, LOCAL only, none pushed)
 - d31e7a8 fix(clock) stale-pixel ghosting  [FLASHED + user-confirmed]
