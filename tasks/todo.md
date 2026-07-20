@@ -1,5 +1,28 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> RETURN BRIEFING (2026-07-19 late session) <<<
+The watch is RUNNING the recovered build (ghost fixed, WiFi good, adaptive-font
+clock). Committed since that flash but NOT yet flashed: clock-slow DIAG
+instrumentation + smaller AM/PM. To pick them up: from stable download mode
+(hold BOOT, tap RST, hold BOOT ~2s) I reflash the current build, you power-cycle.
+
+1. CLOCK TICKS BY 3-4s (only with SD inserted; fine without it). Not the wardriver
+   (30s cadence) nor USB-MSC (hidden). Instrumented (commit): with a card in,
+   read serial for a "[slow] <call> Nms" line - it names the exact blocking call,
+   then I fix it and remove the DIAG. THIS is the first thing to do on return.
+2. AM/PM is now a smaller font (separate span). Verify it looks right.
+3. BACKGROUNDS: resized 410x502 PNGs are in
+   C:\Users\dlaur\Downloads\argus-backgrounds-410x502\ (DarkHorse/HADES/Privacy).
+   Copy these into the SD /backgrounds and DELETE the 1242x1242 originals (too big).
+   Stock-baked-into-firmware deferred (flash 86.4%; do later as a compressed PNG).
+4. BLUETOOTH toggle: use BT-FIRST (toggle BT on before WiFi). Auto BLE keepalive
+   boot-loops (see [[ble-keepalive-boot-loops]]); proper async fix = fresh session.
+5. Boot-loop lesson: NEVER flash while the watch is mid-boot-loop (incomplete
+   flash). Force stable download mode (BOOT+RST) first, then flash.
+
+---
+
+
 Base: fork of `r3dfish/13-37` (upstream remote), branch `darkhorse-argus`, LOCAL ONLY (no push yet).
 Goal: take the T-Watch Ultra to the next level for cybersecurity red/blue team,
 while keeping it a full watch (clock/alarms/timer/calendar). Bring ARGUS's
