@@ -14,6 +14,7 @@ instrumentation + smaller AM/PM. To pick them up: from stable download mode
 3. BACKGROUNDS: resized 410x502 PNGs are in
    C:\Users\dlaur\Downloads\argus-backgrounds-410x502\ (DarkHorse/HADES/Privacy).
    Copy these into the SD /backgrounds and DELETE the 1242x1242 originals (too big).
+   wallpaper.png (= the Privacy image) is the auto-default find_wallpaper() loads.
    Stock-baked-into-firmware deferred (flash 86.4%; do later as a compressed PNG).
 4. BLUETOOTH toggle: use BT-FIRST (toggle BT on before WiFi). Auto BLE keepalive
    boot-loops (see [[ble-keepalive-boot-loops]]); proper async fix = fresh session.
