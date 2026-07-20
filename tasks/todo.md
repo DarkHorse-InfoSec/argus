@@ -8,14 +8,24 @@ host-tested everything. If the morning boot ever loops: BOOT+RST to stable
 download mode, then reflash the prior good commit (ebe9918 = last user-confirmed
 "it is working" build).
 
-DONE + committed this session:
-- Clock-slow root-caused + FIXED: LVGL image cache was off (LV_CACHE_DEF_SIZE=0),
-  so the wallpaper re-decoded from SD every frame (~2.9s render). Enabled a 2MB
-  PSRAM image cache + tightened the wallpaper pixel budget. USER-CONFIRMED FIXED.
-- Low-memory warning toast (lazy, boot-safe). (commit cc8e341)
-- Removed the temporary timing diagnostic.
-- WiFi-side detection wired into the LIVE scan (evil-twin + beacon-flood ->
-  aggregator -> HADES-red accent + forensic log), boot-safe (no BLE bring-up).
+WHAT I FLASHED (final build = last user-confirmed-working commit ebe9918 + only
+DORMANT/low-risk additions, so boot behavior is unchanged from what you confirmed):
+- Clock-slow FIXED (image cache) - USER-CONFIRMED before I flashed it.
+- Low-memory warning toast: lazy runtime overlay, only appears if internal free
+  RAM < ~18KB, auto-dismiss 5s, once/min. Never at setup. (cc8e341, threshold
+  tuned down after). Tune the threshold once you know normal free RAM.
+- Temporary timing diagnostic removed.
+- Watch is in DOWNLOAD MODE after the flash (black screen) - power-cycle (hold
+  crown) to boot the new build. If it ever loops: BOOT+RST -> reflash ebe9918.
+
+DONE-IN-CODE but GATED OFF (committed, NOT active in the flash):
+- WiFi threat pipeline: evil-twin + beacon-flood -> aggregator -> HADES-red accent
+  + forensic log (/Settings/threat_log.txt), portMUX-guarded, boot-safe. (cecbbd2)
+  GATED OFF (#define ARGUS_WIFI_THREAT_PIPELINE 0) because activating it POWERS the
+  WiFi radio ~1s post-boot and holds it all session (bypassing your WiFi toggle,
+  draining battery) - an unverified behavior change. To enable: decide attach policy
+  (passive piggyback on your WiFi vs opt-in setting), flip the flag, verify on-device.
+  The BLE-side detectors still need their (boot-loop-prone) BLE bring-up verified too.
 
 DEFERRED (with honest reasons - no shortcuts means not shipping unverifiable risk):
 - AM/PM smaller: crashed boot (span/font at setup); needs on-device iteration.
