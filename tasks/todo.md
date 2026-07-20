@@ -1,5 +1,35 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> MORNING REPORT (overnight 2026-07-19/20) <<<
+Worked autonomously as instructed. HARD CONSTRAINT honored: I cannot physically
+power-cycle the watch, so I could not on-device-verify the FINAL flash boots - I
+kept the boot/setup path minimal-change, made all new code runtime-guarded, and
+host-tested everything. If the morning boot ever loops: BOOT+RST to stable
+download mode, then reflash the prior good commit (ebe9918 = last user-confirmed
+"it is working" build).
+
+DONE + committed this session:
+- Clock-slow root-caused + FIXED: LVGL image cache was off (LV_CACHE_DEF_SIZE=0),
+  so the wallpaper re-decoded from SD every frame (~2.9s render). Enabled a 2MB
+  PSRAM image cache + tightened the wallpaper pixel budget. USER-CONFIRMED FIXED.
+- Low-memory warning toast (lazy, boot-safe). (commit cc8e341)
+- Removed the temporary timing diagnostic.
+- WiFi-side detection wired into the LIVE scan (evil-twin + beacon-flood ->
+  aggregator -> HADES-red accent + forensic log), boot-safe (no BLE bring-up).
+
+DEFERRED (with honest reasons - no shortcuts means not shipping unverifiable risk):
+- AM/PM smaller: crashed boot (span/font at setup); needs on-device iteration.
+- BLE-side detectors (ble_spam/tracker/tail) + deauth: require ble_scan_add /
+  promiscuous which brings up the BLE controller = the boot-loop risk. Must be
+  wired + verified WITH you, one at a time (see src/detect/README.md).
+- HexHound visual evolution: pet is procedural; HexHound repo has no sprite art.
+  Needs an art/design pass (sprites or a per-stage procedural redesign) - can't
+  fake "quality" autonomously.
+- "Other screens glitching": need specifics (which screens). Likely partial-
+  refresh artifacts (I reverted full-refresh to fix the WiFi ghost); each screen
+  may need a targeted fix like the clock got (drop transforms, right invalidation).
+- Bluetooth toggle proper fix: async off-thread BLE bring-up, a careful session.
+
 ## >>> RETURN BRIEFING (2026-07-19 late session) <<<
 The watch is RUNNING the recovered build (ghost fixed, WiFi good, adaptive-font
 clock). Committed since that flash but NOT yet flashed: clock-slow DIAG
