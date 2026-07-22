@@ -103,11 +103,37 @@ dialog, the low-mem dialog) are the correct architecture - the redesign keeps
 them. Any Offense dashboard should SHOW which radio is live so the operator has
 RF discipline (don't leak while thinking you're passive).
 
-## 6. Open questions for Domenic (blockers before building)
+## 6. Decisions / recommendations (2026-07-22)
 
-1. Wallpaper direction for Offense (HUD grid / world-map / amber matrix / other)?
-2. Tool taxonomy: recon tools (WiFi/Analyze/Wardriver) -> Offense, both, or Defense?
-3. USB SD (and a future Loot screen) reachable in Offense - yes?
-4. Where do neutral utilities (Notify/APRS/USB SD) live once Defense is strict?
-5. Which new offensive capabilities are in scope to build (authorized-use)?
-6. Keep the knock as the entry, or rethink the entry gesture?
+Domenic's calls + my recommendations. Build is gated on the knock working first.
+
+1. **Wallpaper:** Domenic supplied skull.jpg / skull2.jpg. Pick = skull2 (red
+   circuit skull + network-node clusters + matrix rain = network-recon vibe,
+   skull sits high so the clock overlays the lower two-thirds). skull.jpg is the
+   pure-menace alternative. Implement as a MODE-SPECIFIC wallpaper (Offense only).
+2. **USB SD reachable in Offense:** YES (Domenic). For loot offload.
+3. **Dual-use recon taxonomy (my recommendation):** the deniability line is
+   PASSIVE-LISTEN vs ACTIVE-TARGET, not "could argue either way":
+   - Defense (passive, observes threats to YOU, innocent): AirTag/Tracker,
+     Flock/camera, Spycam, Skimmer, NFC-field, Threat Radar, Flipper detect,
+     Evil-Twin DETECTOR, + a passive WiFi survey.
+     Also worth adding here: a deauth DETECTOR (are you being attacked?).
+   - Offense (active, acts ON others, incriminating): Pwn/handshake, port scan,
+     ping sweep, Wardriver, Evil-Twin ATTACK/deauth, Mouse (HID inject), Tesla.
+   Default = strict split (offensive stays hidden). The "show recon tools in
+   Defense too" TOGGLE Domenic suggested is good as an ADVANCED setting, default
+   OFF - flag that enabling it puts recon-looking tools in the innocent Defense
+   view and weakens deniability.
+4. **Neutral utilities (Notify/APRS/USB SD) - my recommendation:** they belong
+   to the REGULAR WATCH (Daily), not Defense. Give Daily a minimal tools surface
+   showing only these, so each mode's grid is coherent (Daily = utilities,
+   Defense = detectors, Offense = offensive). USB SD ALSO appears in Offense
+   (loot). No toggle needed - they aren't sensitive.
+5. **New tools to add** (propose; authorized-use / DarkHorse pentest context):
+   Offense - Evil-Twin ATTACK + deauth, beacon/SSID flood, BLE spam
+   (Sour-Apple-style), a Loot/Exfil manager (list /pwn + /Wardrive, sizes,
+   offload via USB SD, wipe), Wardriver as a first-class Offense tile.
+   Defense - deauth-attack detector, a "who's been following me" tracker timeline.
+6. **Entry gesture:** keep the L-S-L knock on the BOOT button, now with per-beat
+   haptic feedback (the missing piece). Re-verify on-wrist before removing the
+   temporary Settings unlock button.
