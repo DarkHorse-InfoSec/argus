@@ -43,18 +43,23 @@ Tasks:
 - [ ] `pin_pad_screen.{h,cpp}` - full-screen 3x4 button grid (0-9, backspace, OK), masked dots, 4-8 digits, NEUTRAL steel-blue (leaks nothing about what it guards). First-run: if no PINs set, prompt to set unlock then shred (with the validator).
 - [ ] Unlock path: `h_unlock` match -> `enter_offense()` (tiles auto-reveal via the existing gating callback) + drop into the offense Tools grid.
 - [ ] Shred path: `h_shred` match -> FAKE "Unlocking..." identical to the real transition, then a bare/empty offense screen, while `offense_shred()` runs in the background (register its wipe hook = wipe `/pwn/*.pcap`, `/Wardrive/*.csv`, offensive NVS namespaces; SD guard `instance.isCardReady() && !usb_sd_is_running()`; overwrite-before-unlink). NO confirmation dialog, ever.
-- [ ] TEMPORARY test entry to reach the pad before the knock exists (a hidden Settings row or a debug long-press) - removed in Phase B.
+- [x] TEMPORARY test entry to reach the pad before the knock exists (a hidden Settings row or a debug long-press) - removed in Phase B (2026-07-22).
 Touchpoints: new `security_store.{h,cpp}`, `pin_pad_screen.{h,cpp}`; `argus_mode_set_wipe_hook()` (already exists).
 Acceptance: unlock-PIN reveals Offense; shred-PIN shows fake unlock then empty screen and silently wipes + locks out; after shred EVERY PIN yields the empty screen across reboot (soft-recoverable only by erase+reflash); rate-limit blocks hammering; PINs stored only as salted hashes.
 
-### Phase B - Side-button knock (extends the BOOT input layer)
+### Phase B - Side-button knock (extends the BOOT input layer)  [BUILT 2026-07-22, compiles clean, awaiting on-wrist verify]
+Done: `main.cpp` gained a small knock detector (`boot_knock_feed/poll/flush`, `KNOCK_GAP_MS = 700`) layered onto the existing BOOT edges. Each completed press is classified SHORT/LONG (existing duration logic) and fed in. The buffer only ever holds a knock prefix [L] or [L,S]; **L-S-L** within the gap calls `pin_pad_screen_show()`. A lone LONG is deferred by `KNOCK_GAP_MS` (poll flush fires "home" if no SHORT follows); a SHORT with an empty buffer acts immediately. Knock is disarmed when `argus_mode_current() == Offense` or the low-mem modal is open (`s_low_mem_dialog`), where the press runs its ordinary action. The Phase-C temporary "Unlock Offense (test)" Settings row + its `pin_pad_screen.h` include were removed.
 Tasks:
-- [ ] Extend the `main.cpp` BOOT state machine: classify each press SHORT/LONG (already have duration); keep a small recent-press buffer with timestamps; match **L-S-L** within the inter-press gap (`~700ms`).
-- [ ] Coexistence (the reconciliation flagged when BOOT was built): a lone LONG now DEFERS "home" until the gap window passes with no SHORT following - because only the knock starts with a long. SHORT still acts immediately (can't start the knock). Net: back = instant; home = fires ~700ms after a lone long; L-S-L = PIN pad.
-- [ ] Armed only when `argus_mode_current() != Offense` and no modal/PIN pad is open. On match -> `pin_pad_screen_show()`.
-- [ ] Remove the Phase-C temporary test entry.
-Touchpoints: `main.cpp` BOOT block; `pin_pad_screen.h`.
-Acceptance: L-S-L on GPIO0 reliably opens the pad; a plain long still goes home (after the short defer); a plain short still does back/Settings; stray taps never open the pad.
+- [x] Extend the `main.cpp` BOOT state machine: classify each press SHORT/LONG; buffer recent presses with a timestamp; match **L-S-L** within `KNOCK_GAP_MS` (700ms).
+- [x] Coexistence: a lone LONG DEFERS "home" until the gap passes with no SHORT following (only the knock starts with a long). SHORT with an empty buffer acts immediately. Net: back = instant; home = fires ~700ms after a lone long; L-S-L = PIN pad.
+- [x] Armed only when `argus_mode_current() != Offense` and no modal is open. On match -> `pin_pad_screen_show()`.
+- [x] Remove the Phase-C temporary test entry.
+Touchpoints: `main.cpp` BOOT block; `settings_screen.cpp` (removed test row + include).
+Acceptance: L-S-L on GPIO0 reliably opens the pad; a plain long still goes home (after the ~700ms defer); a plain short still does back/Settings; stray taps never open the pad. **On-wrist verify pending.**
+
+### Same-session bug fixes (2026-07-22, from on-wrist photos)  [BUILT, compiles clean, awaiting re-verify]
+- **DEF/OFF chip was a sliver.** Root cause: `LV_OBJ_FLAG_IGNORE_LAYOUT` on the chip dropped `lv_obj_align`'s offset, pinning it to (0,0) where the rounded-display corner clipped it - so last session's 8,8 -> 18,40 move had no effect. Fix (`theme.cpp` `argus_mode_indicator_init`): removed the flag (matching the working notify-banner idiom on `lv_layer_top`) and set `LV_ALIGN_TOP_LEFT, 16, 44`.
+- **PIN pad backspace/OK keys were empty "tofu" squares.** Root cause: the keypad matrix used `font_dh_label_28`, an Orbitron subset carrying only digits/colon/space/AMP, so `LV_SYMBOL_BACKSPACE`/`LV_SYMBOL_OK` had no glyphs. Fix (`pin_pad_screen.cpp`): keypad items now use `&lv_font_montserrat_28`, which bundles those FontAwesome glyphs - both action keys render as real icons, digits stay legible.
 
 ---
 
