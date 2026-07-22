@@ -1,5 +1,200 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> DARKHORSEIFY ROUND 6 (2026-07-21) <<<
+Fixed the heading/boot-logo cream regression (28 titles -> argus_accent(); boot splash ->
+ARGUS_ACCENT). Then user: proceed with scroll perf (1) + 48px fonts (2); also "Time icons
+need DarkHorseifying" (3).
+- TIME ICONS (3): added alarm/stopwatch/timer/calendar glyphs to gen_icon_sprites.py (steel-
+  blue), rendered + copied to SD /Icons/. time_screen.cpp: upgraded make_tile to the Tools
+  gradient+rim style, added tile_icon() SD-load-w/-procedural-fallback, wired the 4 tiles.
+- 48px FONTS (2): generated SUBSET fonts (tiny flash) - font_dh_mono_48 (VT323, digits/colon
+  "0123456789:.- ") for alarm/stopwatch/timer big readouts; font_dh_label_48 (Orbitron,
+  "START STOP") for wardriver button. Remaining montserrat_48 = 3 SYMBOL icons (kept).
+- SCROLL PERF (1): on_grid_scroll cb on tools_grid calls main_loop_request_lvgl_priority(8)
+  each LV_EVENT_SCROLL, topping up the priority window so background ticks don't stutter the
+  flick. (Primary lever = scheduling, matches "lags behind". If still laggy after flash, the
+  throughput lever is lighter tiles / opaque icons.)
+- Flash ~91% (subset 48px fonts are ~8KB total). Icons on SD = 0 flash.
+- NEXT: flash; user confirms scroll + Time icons + 48px displays. Custom watchface still pending.
+
+---
+
+## >>> DARKHORSEIFY ROUND 5 (2026-07-21, flashed) <<<
+User: Send Message not branded; ALL Tools/Time subpages need brand everywhere except heading;
+Tools scroll lags ("RAM issue?"). Viewed 5 submenu photos (wifi/wifi-pw/analyze/hexhound/pager
+- mostly good already).
+- SEND MESSAGE: its title was montserrat_36 (not Bank Gothic) - fixed to font_dh_ui. Body
+  already Orbitron.
+- COMPREHENSIVE FONT SWEEP: prior sweep only hit montserrat_20. Generated Orbitron 14/16/28
+  (font_dh_label_14/16/28); tools/fontify_all.py migrated 109 more body labels across 28 files,
+  symbol-safe (11 protected) + keyboard-safe (kb keys are symbols) + matrix_bg excluded.
+  48px (9 uses: START btn, stopwatch/timer digits) DEFERRED - flash-heavy at 48px.
+- Flash now 90.7% (2852405/3145728). ~293KB free. Deferring 48px fonts protects budget.
+- SCROLL LAG = NOT RAM (61.8% int, PSRAM has room). Cause: (1) partial-refresh display shares
+  ONE main loop between LVGL + background work via a priority system (main_loop_request_lvgl_
+  priority) - background work mid-scroll makes animation "lag behind"; (2) 16 transparent icon
+  images alpha-blended per frame. FIX LEVERS (offered, not done - own flash to measure): stronger
+  LVGL priority window during active scroll; pause matrix rain while Tools scrolls; lighten tiles
+  (opaque icons / drop gradient).
+- STILL OPEN: 48px brand fonts; scroll perf pass; custom watchface (mockup, awaiting sign-off);
+  wire surveillance detector to live scan (hardware-gated).
+
+---
+
+## >>> DARKHORSEIFY ROUND 4 (2026-07-20, flashed) <<<
+Round 3 approved on hardware ("looks good"). This round:
+- CLOCK BIGGER: added lv_font_montserrat_clock_120 (Bank Gothic); CLOCK_TEXT_PAD_X 16->4 +
+  CLOCK_LETTER_SPACE -3; the size selector measures WITH that spacing so 120px is chosen
+  only when it fits (overflow-safe). Width-limited: "00:00" at 120px = ~400px of 402 usable.
+- BRAND FONT EXTENSION: tools/fontify_labels.py migrated 112 montserrat_20 labels ->
+  font_dh_label_20 (Orbitron) across 29 files. SYMBOL-SAFE: skips any label var that ever
+  holds LV_SYMBOL (8 protected: wifi/bt/gps/sd indicators, flock_icon, wardriver eye,
+  threat_radar head). theme.h auto-added. Verified no symbol var got a brand font.
+- Flash now 89.9% (2826513/3145728) - WATCH THE BUDGET; baking more fonts into flash is
+  getting tight. SD-loaded assets (icons) remain the right call for anything big.
+- NEXT: user hardware check (watch for any vanished status icon = missed symbol label).
+  Still pending: custom watchface (mockup awaiting sign-off); VT323 readouts on more
+  numeric fields if wanted.
+
+---
+
+## >>> DARKHORSEIFY ROUND 3 (2026-07-20, on-hardware iteration) <<<
+Wardriver now STARTS on hardware (PSRAM fix confirmed). This round from user feedback:
+- WARDRIVER doesn't STOP when pressed: stop_wardriving() (SD flush + WiFi.mode(WIFI_OFF))
+  ran BEFORE the button label update, so the tap looked ignored. FIX: flip UI to START +
+  lv_refr_now FIRST, then teardown (mirrors the start optimistic-flip).
+- Secondary text COLOR: user preferred white/cream, NOT the steel-blue accent I applied.
+  ARGUS_TEXT/ARGUS_TEXT_DIM (cream) in theme.h; reverted 192 text_color spots.
+- CLOCK LARGER: lv_font_montserrat_clock_110 (Bank Gothic) prepended to the adaptive array.
+- BRAND FONTS (user: "don't make everything Bank Gothic"): Bank Gothic = wordmark/clock/
+  titles; Orbitron = labels (font_dh_label_20 -> tile labels/date/time tiles); VT323 =
+  readouts (font_dh_mono_16 -> battery/mesh). OFL TTFs fetched to tools/brandfonts/.
+  Watch-face symbol labels left in Montserrat (icons). See memory darkhorse-font-system.
+- NEXT: build (in progress) + flash; confirm on hardware.
+
+---
+
+## >>> DARKHORSEIFY PASS (2026-07-20, differentiate from 13-37) <<<
+Directive: "how does this differ from r3dfish/13-37"; DarkHorse-brand the whole UI.
+User chose the high-fidelity option for each: custom HD sprites, full custom
+watchface, Start-button explains-why.
+
+FINDINGS (ground truth):
+- argus-watch is a strict SUPERSET of 13-37 at source (every 13-37 file + ~30 added).
+  Tools grid = 16 tiles vs 13-37's 8. "Tools they have we don't" is NOT true in code.
+  -> user to name the specific missing tools (likely stale flashed build or the main
+     swipe-menu radios vs the Tools grid).
+- Time screen: only 5 lines differ from stock 13-37. Essentially untouched.
+- Tools screen: 390 lines differ but tile ICONS are still 13-37's procedural rainbow.
+- Wardriver Start: gated behind GPS-lock + SD-ready + radio; silent dead tap when unmet.
+
+TASKS:
+- [x] Wardriver Start fix: button always clickable, action-level gate, HADES-red dialog
+      naming missing GPS/SD/radio. (wardriver_screen.cpp) BUILD OK.
+- [x] Text rebrand: already branded (prior 27-title sweep + mesh name); swapped the last
+      user-facing "1337" matrix egg -> "REDTEAM". BUILD OK.
+- [x] Custom HD tool-icon sprites: tools/gen_icon_sprites.py -> transparent glyph+glow
+      PNGs (SD /Icons/*.png), 14 sprites. Tesla=user Tesla logo(amber), flock=user birds
+      (red), pager=13-37 green procedural, flipper+pet kept. Deploy folder staged at
+      tools/icon_out/Icons/. Wired via tile_icon() sprite-or-procedural-fallback;
+      make_tile upgraded (dark gradient + steel rim). BUILD OK (flash 88.2%, zero cost).
+- [~] Full custom watchface: MOCKUP rendered both states (tools/gen_watchface_mockup.py
+      -> icon_out/watchface_mockup.png). AWAITING USER SIGN-OFF before editing time_screen.cpp
+      (primary screen; time_screen is boot-crash-prone per memory - do not rush).
+- [x] Surveillance-device detector (Meta Ray-Ban/body cam/hidden cam/action cam/trackers):
+      src/detect/surveillance_device.* + ThreatDomain::Surveillance + threat_map routing +
+      16 tests. Host suite 158/1601 checks 0 fail (verified). Pure/unwired; hardware-gated
+      integration documented in src/detect/README.md. See memory surveillance-device-detector.
+- Port scanner: RECOMMEND keep nested under WiFi (scan a picked host; standalone = manual
+  IP entry, bad UX). Map/nav: lean keep under Meshtastic; offered a standalone Map tile.
+- NEXT: on watchface sign-off, implement it; fold in detector when subagent lands; then
+  compile-verify; hand hardware flash to user (never flash time_screen changes AFK).
+
+---
+
+## >>> DARKHORSEIFY ROUND 2 (2026-07-20, on-hardware iteration) <<<
+Confirmed NEW firmware runs on watch (Start button now flips STOP->START = my code path;
+old firmware couldn't). "Nothing looks different" earlier = /Icons wasn't on the SD yet.
+
+- WARDRIVER ROOT CAUSE FOUND + FIXED: not the readiness gate. start_wardriving() returned
+  false silently (flip STOP then revert). Cause: ap_table heap_caps_calloc of WD_BUCKETS
+  (32768) * sizeof(ApRecord ~144B) = ~4.5 MB PSRAM, which FAILS because ARGUS added a 2 MB
+  LVGL cache 13-37 lacks. FIX: WD_BUCKETS 32768->16384 (~2.36 MB, load factor 0.61) so it
+  fits; AND surface the failure reason via low_mem_show_dialog (s_wd_start_err: "Out of
+  memory" vs "WiFi could not start / turn Bluetooth off") instead of the silent revert.
+- CLOCK FACE -> BANK GOTHIC: regenerated lv_font_montserrat_clock_{56,72,96}.c from
+  D:/Projects/DarkHorse/_Brand/.../BankGothicMediumBT.ttf via gen_clock_font.py (now
+  argv-driven). Kept the var names = drop-in, no main.cpp change.
+- SECONDARY TEXT -> DARKHORSE ACCENT: tools/accentify_secondary_text.py rewrote 179
+  neutral-grey text_color calls across 32 files (bright greys->ARGUS_ACCENT, dim->
+  ARGUS_ACCENT_DIM); only text_color, only neutral greys (semantic red/orange/green kept);
+  theme.h auto-added where missing (0 files left missing).
+- Icons: /Icons copied to the SD card (drive G:). 13 PNGs (pager stays 13-37 procedural).
+- Build: (in progress) then flash from download mode (watch present, user driving).
+
+---
+
+## >>> SESSION REPORT (2026-07-20, DES-70072, ALL user-verified on hardware) <<<
+Long session, ended with "Everything is working, survived a reset, everything
+survives on battery." SHIPPED + VERIFIED:
+- WiFi/BLE FREEZE FIX (the original ask): symmetric pre-call coexistence guard so no
+  radio toggle can freeze. ble_scan_add refuses if WiFi up (new ble_scan_last_error);
+  wifi_beacon start_wifi + wifi_radio_screen on_toggle refuse if BLE controller up;
+  guards run BEFORE the hanging WiFi.mode()/esp_bt_controller_enable() call. Tools
+  tiles show a "turn off the other radio" dialog instead of a dead tile.
+- All-off-at-boot + Settings "Enable at boot" chooser (WiFi/Bluetooth/LoRa/GPS; NFC
+  removed; WiFi<->BLE mutually exclusive w/ warning). boot_prefs.* + main.cpp gating.
+- Wallpaper: renders again (removed a fragile free-RAM guard check), 100KB compressed
+  file-size guard added (background.cpp) so a too-big image can't crash boot, and the
+  boot sequence now DECODES THE WALLPAPER BEFORE bringing up radios (main.cpp reorder)
+  so wallpaper + a boot radio don't OOM the internal SRAM.
+- Privacy wallpaper: re-encoded 147KB->72.5KB palette PNG (Pillow, adaptive 256-color),
+  set as /backgrounds/wallpaper.png. Now the default and boots fine w/ radios on.
+- Rearrangeable Tools grid (long-press-drag, /Settings/tools_order.txt) + Flock single-
+  radio notice: both user-verified. Dialog OK button enlarged. Settings shiftable-row
+  cap 32->64 (fixed the boot-row dead-gap).
+- BLE-at-boot WORKS (verified on battery). My repeated "it loops" calls were ALL wrong
+  (confounds). See memory ble-keepalive-boot-loops (RESOLVED).
+
+KEY LESSON (memory usb-power-sd-brownout-bootloop): the watch boot-loops with the SD in
+ONLY on USB power (brownout); FINE on battery. TEST ON BATTERY. Flash with SD out or via
+download mode. Also: opening the CDC serial port RESETS the ESP32-S3 (looks like a loop).
+
+FOLLOW-UP WORK (all FLASHED + user-verified on hardware):
+- [ram] boot diagnostic REMOVED from low_mem_check() (+ esp_bt.h include dropped).
+- WiFi threat pipeline ACTIVATED, PIGGYBACK policy (ARGUS_WIFI_THREAT_PIPELINE=1):
+  detect_pipeline_tick attaches its beacon consumer ONLY while another WiFi scan
+  (Evil Twin/Flock/Pwn/wardriver) is already running, detaches when none. Never powers
+  WiFi on itself, never flips STA->monitor, nothing on the boot path. Added
+  wifi_beacon_consumer_count(). Domenic chose piggyback over "on WiFi toggle".
+- HexHound HD ART (Domenic loved it): pet + Tools-tile icon now use HD sprite assets
+  (5 stages) generated by tools/gen_hexhound_sprites.py, loaded from SD /HexHound/*.png,
+  replacing the procedural LVGL shapes. pet_screen.cpp update_sprite() per stage;
+  tools_screen draw_pet_icon() -> pup_icon.png. Zero flash cost. See memory
+  hexhound-hd-art. Wallpaper+radio boot ORDERING fixed too (decode wallpaper before
+  radios or OOM). BLE-at-boot CONFIRMED WORKING on battery.
+
+STILL OPEN (need input or a focused effort):
+- BLE-side detectors (ble_spam, tracker_ident, tail_detect): mirror the WiFi piggyback
+  pattern via a BLE detect pipeline on ble_scan_add; wire ONE at a time, extend the host
+  e2e test first, flash + verify each (per src/detect/README.md). Focused multi-flash job.
+- "Other screens glitching": BLOCKED - Domenic said SKIP for now (need which screens + how).
+- SLIM DAILY-WEAR VERSION (Domenic wants a thinner watch he'd actually wear daily; 2026-07-20).
+  Physics: full ARGUS (WiFi + BLE + SX1262 sub-GHz + GPS/NFC + battery) can't be dress-watch
+  thin - the radios/antennas/battery need volume. So the plan is a REDUCED build, not a full
+  thin port. Two paths to scope/spec later:
+  (1) Custom ESP32-S3 + SX1262 build (keeps full features via the same silicon, only modestly
+      slimmer with a smarter PCB/battery; firmware ports w/ a new HAL layer, pure logic reused).
+  (2) Slim BLE-focused companion for daily wear (BLE anti-stalking: AirTag/Find My, Flipper,
+      skimmer, ble_spam, tracker/tail + HexHound pet + WiFi SCAN list; NO monitor mode, NO
+      sub-GHz). Target board options: nRF52 (PineTime/Bangle.js, BLE-only, full rewrite) or a
+      thin ESP32-S3 color watch (T-Watch S3 / Open-SmartWatch, keeps WiFi+BLE, no SX1262), or a
+      Wear OS / phone companion app. Pairs with the T-Watch Ultra as the "field tool" for the
+      RF work. The pure detect/ + hexhound C++ is platform-agnostic and reusable either way.
+  ACTION when picked up: Domenic chooses path (1) vs (2) + a target board, then spec the HAL/
+  feature subset. TODO: sketch the slim-version feature list + board pick (offered, deferred).
+Nothing committed this session (local only, per Domenic - see memory keep-argus-local-no-fork).
+
 ## >>> MORNING REPORT (overnight 2026-07-19/20) <<<
 Worked autonomously as instructed. HARD CONSTRAINT honored: I cannot physically
 power-cycle the watch, so I could not on-device-verify the FINAL flash boots - I
