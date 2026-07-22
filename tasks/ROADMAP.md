@@ -9,19 +9,47 @@ Legend: [ ] todo  [~] in progress  [x] done  [DES] do on the DES-70072 machine.
 
 ---
 
-## 0. Personas / mode selection (ARCHITECTURE - do this first, everything hangs off it)
-Decision: a **persisted persona** the watch boots into, switchable. Offensive surface is
-HIDDEN in daily mode = real opsec (plausible deniability if glanced at / confiscated).
-Extends the existing `device_mode.*` (Daily-wear vs Field-tool) built for notifications.
-- [ ] **Daily Wear** - clock, notifications, timepieces, calendar. Tools grid + detectors
-      hidden. BLE-first. Looks like an innocent smartwatch.
-- [ ] **Field Tool** - full defensive + offensive suite. WiFi-first.
-- [ ] **Guardian** (optional) - passive: Threat Radar + detectors run silently in the
-      background, minimal UI, no offensive tiles. "Watches your back."
-- [ ] Switch mechanism: persist last persona (NVS, like the notification platform), boot
-      into it. Deliberate switch via a boot chooser (skippable) OR a hidden long-press.
-      Boot chooser maximizes opsec (intentional posture); hidden gesture is stealthier.
-- [ ] Gate the Tools grid + offensive modules behind the persona so daily mode is clean.
+## 0. Modes: Daily / Defense / Offense (ARCHITECTURE - do this first, everything hangs off it)
+Direction (Domenic, refined 2026-07-22): ONE watch, THREE modes the user chooses between -
+**Daily**, **Defense**, **Offense** - built on the existing `device_mode.*` (Daily-wear vs
+Field-tool, already there for notifications). **Daily is the DEFAULT** it boots into.
+**Offense is baked in but HIDDEN** - revealed only by a deliberate hidden action (hidden
+menu / unlock gesture), so a glance or a confiscation shows only a normal watch = real opsec
+/ plausible deniability. Defense is openly selectable.
+- [ ] **Daily** (default boot) - clock, notifications, timepieces, calendar. Tools grid +
+      detectors + offensive tiles hidden. BLE-first. Looks like an innocent smartwatch.
+- [ ] **Defense** - passive anti-surveillance: Threat Radar + detectors (BLE-tail / AirTag /
+      Flock / skimmer / evil-twin) run with alerting UI. No offensive tiles. "Watches your back."
+- [ ] **Offense** - HIDDEN. Full offensive suite (Pwn / deauth / evil-portal / HID / ...),
+      surfaced only after the unlock action. Authorized-testing gated.
+- [ ] Switch/unlock mechanism: persist current mode (NVS, like the notification platform),
+      boot into Daily by default. Defense selectable from a normal menu; Offense revealed via
+      a hidden long-press / gesture / code (TBD - pick the stealthiest that isn't fiddly).
+- [ ] Gate the Tools grid + offensive modules behind the mode so Daily stays clean.
+
+### 0a. Mode access, unlock & theming (design 2026-07-22)
+- **Daily** = default boot. Opsec: a reboot or confiscation always shows only Daily.
+- **Defense** = openly reachable (no secrecy needed): a "Mode" entry in Settings or a
+  quick-panel toggle. OPEN: menu vs swipe; and does Defense persist across reboot or always
+  fall back to Daily on boot? Recommend: always boot Daily, Defense one tap away.
+- **Offense** = hidden. Entry = a hidden KNOCK on the **SIDE BUTTON** (the same physical
+  button that opens Settings): a morse-style sequence long-short-long (leading candidate) that
+  opens a **PIN pad**. Must COEXIST with the button's normal Settings-open press. Correct
+  unlock PIN -> offensive suite.
+- **Two-PIN duress model (PROPOSED - Domenic's idea, needs decision):** unlock-PIN reveals
+  offense; a second "shred" PIN destroys it. TECHNICAL SCOPE: the compiled offensive CODE
+  lives in flash and reflashing the same .bin restores it, so "shred" realistically = wipe
+  offensive PAYLOADS / CAPTURES / CONFIG (SD + NVS) and burn a persistent "offense locked
+  out" flag in NVS the firmware refuses to clear; RECOVERY = full flash/NVS erase + reflash.
+  Strongest duress UX: shred-PIN shows a fake "unlocking..." then a bare/empty offense screen
+  while wiping in the background (coercer thinks they got in). Guard hard against accidental
+  self-shred: very distinct PIN, no digit overlap with the unlock PIN.
+- **Per-mode look & feel (DECIDED):** each mode visually unmistakable so you never fire an
+  offensive action thinking you're in Defense. Base theme driven by mode: Daily = clean
+  neutral (steel-blue ARGUS accent, innocent); Defense = steel-blue + shield/radar identity,
+  persistent "DEF" indicator; Offense = aggressive (HADES-red / amber accent, teeth/skull
+  motif, red status bar). Extend theme.h / argus_accent() to be mode-aware; keep the existing
+  threat-red flip layered on top.
 
 ## 1. Quick wins (started 2026-07-22)
 - [x] 3-wide tile grid (first pass): tiles 118px, sprites scaled to ~78px, label font 14.
