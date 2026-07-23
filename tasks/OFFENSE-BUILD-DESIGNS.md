@@ -1,5 +1,34 @@
 # ARGUS Offense/Defense build designs (from parallel design teams, 2026-07-22)
 
+## UPDATE 2026-07-23 (daytime autonomous run) - hardware-verified progress + new tools
+
+HARDWARE-VERIFIED by Domenic this session:
+- Deauth attack INJECTS (frame count climbs to 1000s) - the sanity-check override +
+  the -Wl,--allow-multiple-definition flag work on this core. Big unknown resolved.
+- Beacon flood works (now sprays 6 SSIDs/tick so several appear at once).
+- Boot, all defensive tiles, Loot, the busy-dialog + bigger fonts.
+- Deauth survey->arming->inject handoff fixed (was blocked by the threat pipeline's
+  WiFi piggyback); single-owner offense_wifi prevents two injectors colliding.
+- Deauther now has a per-AP TARGET PICKER (survey -> tappable AP list -> all or one).
+- CONFIRMED root cause of the USB-only boot loop: the wallpaper decode OOMs because
+  the USB stack eats internal SRAM at boot (boots fine with wallpaper OFF). Permanent
+  fix pending: shrink the wallpaper file on the SD to ~25KB (see the wallpaper memory).
+
+NEW OFFENSE TOOLS added this run (compile-verified, NOT yet hardware-tested):
+- Rogue AP (evil twin): broadcasts lure SSIDs (xfinitywifi, attwifi, ...) as an open
+  AP, shows associated clients. offense_wifi gained AP mode; single-owner with the
+  injectors. rogue_ap.{h,cpp}. Flash after this: ~93.2%.
+- Probe sniffer (PROBES): passive - logs nearby devices + the SSIDs they directed-
+  probe for (reveals networks a device has joined). Extended the wifi_mgmt fanout with
+  src MAC + raw frame. probe_sniffer.{h,cpp}.
+
+STILL DEFERRED (need live BLE testing, not blind): BLE spam / Sour-Apple - the BLE
+scan manager owns the single GAP-callback slot, so serializing the advertising
+reconfig against the Bluedroid race needs a hardware loop; it also shares the
+advertising path with the working notification service.
+
+---
+
 ## OVERNIGHT BUILD STATUS (2026-07-22 night) - COMPILE-VERIFIED, NOT HARDWARE-TESTED
 
 Built + committed this session (all compile clean; NONE flashed/tested - I could
