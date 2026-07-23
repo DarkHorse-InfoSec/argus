@@ -1,5 +1,37 @@
 # ARGUS Offense/Defense build designs (from parallel design teams, 2026-07-22)
 
+## OVERNIGHT BUILD STATUS (2026-07-22 night) - COMPILE-VERIFIED, NOT HARDWARE-TESTED
+
+Built + committed this session (all compile clean; NONE flashed/tested - I could
+not flash while Domenic slept). Each is dormant-until-tapped, so the firmware boots
+inert; the radio only comes up on a deliberate START.
+
+- [x] Loot manager (Offense) - lists/offloads/wipes captures. LOW risk.
+- [x] Deauth-attack DETECTOR (Defense) - wires the existing pure detector. LOW-MED risk.
+- [x] Tail timeline (Defense) - reads the threat_radar store. LOW risk.
+- [x] Beacon flood (Offense) + offense_wifi shared injector. MED risk (WiFi TX).
+- [x] Deauth attack (Offense) - survey then inject; needs -Wl,--allow-multiple-definition
+      (added) for the sanity-check override. MED-HIGH risk; deauth TX UNVERIFIED on this core.
+
+DEFERRED (too risky to blind-ship without a hardware test - do these WITH Domenic):
+- [ ] BLE spam - shares the advertising path with the WORKING ANCS/notification
+      service; blind-shipping risks regressing notifications + hitting the documented
+      Bluedroid GAP-reconfig race. Needs a guard (refuse while notifications active)
+      + on-hardware GAP serialization test.
+- [ ] Rogue AP / evil-twin ATTACK - WebServer + DNSServer would likely blow the flash
+      budget (already at 93.0%); most complex. Needs its own flash-budget + hardware pass.
+- [ ] Offense visual identity (palette tokens, mode-aware tile face, pulsing armed
+      frame, icon set) - safe but touches shared make_tile/theme; deferred so it can be
+      done + eyeballed on-wrist rather than blind.
+
+FIRST on-wrist steps for the built tools: flash, enter Offense, and test EACH new
+tool ONE AT A TIME (they bring up the radio on START). Deauth: confirm frames > 0
+(if 0, esp_wifi_80211_tx is still rejecting on this core -> the override/flag needs
+revisiting). Watch flash headroom (93.0% now) before adding rogue AP.
+
+---
+
+
 Four design agents produced implementation-ready designs. This is the consolidated,
 actionable record + the recommended BUILD ORDER. Full loot draft code is saved in
 tasks/drafts/. Nothing here is built yet except the skull2 wallpaper.
