@@ -1,5 +1,109 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> SESSION 2026-07-24: exact panic captured and fixed <<<
+- Two exact matching core dumps were captured after the diagnostic flash. Both
+  show `IllegalInstruction` in the same chain:
+  `loop -> LilyGoUltra::loop -> SensorBHI260AP::update ->
+  bhy2_get_and_process_fifo -> parse_fifo ->
+  BoschParseStatic::parseData -> corrupt indirect target`.
+  The invalid PCs changed from `0x3065A54A` to `0x3025A54A`, while the valid
+  callback object remained `instance.sensor` at `0x3FCC1894`.
+- The SD phase log proves this happens before the first `loop` marker and before
+  `wp-defer`, so it is the previously-known first-boot sensor loop, not a crash
+  inside the raster read/render itself.
+- Hardware A/B: Wallpaper ON + "Motion brightens screen" OFF survived 12-15+
+  battery boots. Turning Motion back ON eventually restored the boot loop and
+  produced the second identical BHI260 dump.
+- Backtrace-driven fix keeps the persisted Motion feature enabled, but defers
+  starting its 10 Hz BHI260 stream until 15 s after boot, after the wallpaper
+  render/current window.
+- HARDWARE CONFIRMED: 12-15+ battery cold boots with Wallpaper and "Motion
+  brightens screen" both ON passed. Motion brightened the screen after the
+  15-second defer, and Daily/Defense/Offense wallpaper transitions all passed.
+- Cleanup complete: current-raster-only loading remains; the disproven 4 KB
+  bounce buffer and temporary `/Settings/bootlog.txt` phase writes were removed.
+  Flash core-dump support and `tools/read_coredump.ps1` remain permanently.
+- Final cleaned release build passed. `firmware.bin` SHA256:
+  `C9B5620D6477774EC10381E05CDB6DE2477B6DCACF5E966EAB49303CF6A282B2`.
+- CLEANUP REGRESSION: the first cleaned build required many attempts to pass the
+  ARGUS boot screen. After clearing the stale dump slot, a new exact dump matched
+  that ELF and reproduced the same BHI260 chain and invalid target
+  `0x3065A54A`. This independently proves the removed wallpaper bounce buffer
+  was not on the failing path.
+- Follow-up fix: SensorLib's `BoschParseStatic` callbacks now make qualified,
+  non-virtual calls to `SensorBHI260AP` instead of reading the failing indirect
+  target from the object vtable. `scripts/patch_sensorlib.py` applies the guarded
+  dependency patch reproducibly. The resulting firmware was flashed and
+  byte-verified; SHA256:
+  `9A605B854AAD843021FDF409CB22A6652FCFFE96A115450AE5491B38DCD75785`.
+  HARDWARE CONFIRMED: 12-15 battery cold boots with Wallpaper and Motion both ON
+  passed without another loop.
+- Confirmed the stock Arduino-ESP32 S3 SDK already has ELF core dumps to flash
+  enabled, and the board partition table reserves 64 KB at `0xFF0000`.
+- Preserved the old on-device dump before flashing:
+  `artifacts/coredump/ondevice-before-diagnostic.raw.bin`. Its embedded application
+  SHA (`c58b2d62419e622f`) does not match the surviving local ELF
+  (`0ca9155b8c7b96bf`), so exact source-line decoding is intentionally refused.
+  Direct inspection found a corrupted execution PC `0x3065A54A` and return address
+  `0x821B688A`. A provisional map puts the return in the BHI260/SensorLib region,
+  but this is NOT an exact root-cause result without the matching old ELF.
+- Rebuilt and flashed the current-raster-only diagnostic firmware on COM19. An
+  esptool `verify-flash` digest check passed against the current
+  `.pio/build/twatch_ultra/firmware.bin`, so the next dump has an exact matching
+  `firmware.elf`.
+- Hardened `tools/read_coredump.ps1`: it reads the fixed partition directly,
+  preserves raw + core ELF artifacts, verifies the flashed app, and stops on an
+  ELF/SHA mismatch instead of printing plausible but false source lines.
+## >>> SESSION 2026-07-24: coexist attempt + Daily/Offense UI fixes <<<
+Context: watch boots on battery with wallpaper OFF (wallpaper=0 on SD). Worked through
+BLE+WiFi+LoRa coexistence, then a batch of UI fixes.
+
+- **BLE+WiFi+LoRa COEXISTENCE — ATTEMPTED, FELL BACK (guards restored).** Added master flag
+  `src/radio_coexist.h` (`ARGUS_RADIO_COEXIST`). 1 = boot BLE keepalive + all mutual-exclusion
+  guards `#if !ARGUS_RADIO_COEXIST`-gated out (manager guards in wifi_beacon_manager/offense_wifi
+  AND the UI pre-checks in wifi_radio_screen on_toggle+restore_power / wifi_screen start_scan);
+  0 = guards active. ON HARDWARE: boots fine, but tapping WiFi with BLE up HARD-FREEZES (even
+  with NO phone connected), and WiFi-enable-at-boot BOOT-LOOPS. The WiFi+BLE hang is real and
+  baseline on our build. **Domenic: the hang predates the notifications feature** — so ANCS is
+  NOT the culprit (corrected in memory). Flag set back to **0**; all scaffolding preserved for a
+  future deeper attempt (measure contiguous internal SRAM, trim resident footprint / diff vs
+  upstream r3dfish). Full journey in memory `reference-simultaneous-ble-wifi-lora`.
+- **TIME HUB ICONS RED IN OFFENSE (fixed, confirmed).** `tt_recolor_red` only set bg/border/line;
+  the 6 clock tiles are `/Icons/*.png` sprites (confirmed on SD) so they ignored those. Added
+  `lv_obj_set_style_image_recolor` + `_opa(COVER)` so sprites tint solid red in Offense (matches
+  Tools), natural in Daily/Defense. Domenic: "Icons are red."
+- **BOOT BUTTON RESPONSIVENESS (fixed, confirmed).** (a) Knock (L-S-L) now armed ONLY on the
+  clock screen — elsewhere BOOT runs its back/home action immediately, so an accidental long-ish
+  tap can't buffer a stray [L] that eats the next press. (b) Added ISR-latch recovery: the FALLING
+  `back_btn_pressed` ISR now recovers a fast tap the duration-poll dropped to loop latency (as a
+  SHORT press; 150ms cooldown suppresses bounce). Factored the dispatch into `boot_dispatch()`.
+  Domenic: "button feels responsive."
+- **NOTIFY LAUNCHER IN DAILY (flashed 2026-07-24, awaiting on-hardware confirm).** Daily had no
+  way to reach notifications (only the Tools "Notify" tile, gated in Daily). Added a "Notify" tile
+  to the Time hub (`notifications_screen_show()`), procedural gold-bell icon (no SD sprite needed),
+  bumped `s_ttiles[9]->[10]`. Time hub is now 10 tiles.
+- **WALLPAPER: fade-render FIXED, but an INTERMITTENT PANIC is STILL OPEN (unsolved end of session).**
+  On battery only, wallpaper-on, the watch intermittently PANICS (reset=4) / INT_WDT (reset=5) at the
+  ~10-12s load/render and boot-loops. Left boot-looping - recover via pull-SD or wallpaper=0. Disproven:
+  bounce buffer, load-in-setup (made it worse). Leading theory: power/PSRAM glitch on battery. NEXT: get
+  the real backtrace (ESP core-dump / USB-Serial-JTAG console), revert load-all-3. See argusprompt.txt.
+  The fade-render fix itself WORKED:
+  it re-rendered the full 410x502 image ~15x in <1s -> INT_WDT on battery. Dropped the fade
+  (render once at bg_opa in background.cpp apply_current). Kept the 10s defer + PSRAM preload.
+  Added a "wallpaper applied ms=" bootlog marker. Per-mode wallpapers now render + HOLD on all
+  three modes. Enable via Settings -> Wallpaper toggle.
+- **MODE LANDING (confirmed correct, NO change):** Offense -> Tools screen (PIN-gated, high-intent,
+  land on the arsenal); Defense -> wallpaper/home (ambient posture). Already works this way.
+- **STILL OPEN:** (1) first-boot-after-RESET loop — loops once on the 1st reset then boots fine;
+  SEPARATE from the wallpaper (happens with wallpaper OFF too). Diagnose via the logged reset=
+  codes in /Settings/bootlog.txt (9=brownout vs 5/6=watchdog) — needs SD in laptop. (2) the deeper
+  BLE+WiFi+LoRa coexistence investigation (parked, scaffolding preserved behind ARGUS_RADIO_COEXIST=0).
+- Flash/test loop: download mode = COM19 (303A:1001), app CDC = COM20 (303A:8227). SD was in the
+  laptop during the notify flash — **must be reinserted** before testing (clock icon sprites live
+  on it).
+
+---
+
 ## >>> DARKHORSEIFY ROUND 6 (2026-07-21) <<<
 Fixed the heading/boot-logo cream regression (28 titles -> argus_accent(); boot splash ->
 ARGUS_ACCENT). Then user: proceed with scroll perf (1) + 48px fonts (2); also "Time icons

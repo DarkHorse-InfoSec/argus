@@ -6,6 +6,63 @@ new agent has the complete context in-repo. `argusprompt.txt` is the short hando
 this is the long form with every disproven fix. Read this before touching
 `src/background.cpp`.
 
+## Panic-capture continuation, 2026-07-24
+
+The SD recovery setting is now `wallpaper=0`, and a current-raster-only diagnostic
+build was flashed and verified byte-for-byte against the local firmware binary.
+The board and SDK already support flash core dumps; `tools/read_coredump.ps1` now
+extracts the 64 KB partition at `0xFF0000`, preserves the raw/core files, verifies
+the exact application image, and then decodes.
+
+An older saved panic was recovered before the diagnostic flash. Its local ELF was
+already overwritten, so exact decoding is impossible. The dump contains an invalid
+execution PC (`0x3065A54A`) and return address `0x821B688A`, which is consistent
+with control-flow corruption. Mapping that return through the non-matching current
+ELF lands provisionally in BHI260/SensorLib code, but that symbol must not be treated
+as the root cause. The next battery panic from the verified diagnostic build will
+have the exact matching ELF and is the authoritative result.
+
+Two later dumps DID match the diagnostic ELF and gave the authoritative result.
+Both are `IllegalInstruction` crashes in the BHI260 motion-sensor FIFO path:
+`loop -> LilyGoUltra::loop -> SensorBHI260AP::update -> parse_fifo ->
+BoschParseStatic::parseData`, where the final virtual call jumps to invalid data
+(`0x3065A54A`, then `0x3025A54A`). The callback object itself is the correct
+`instance.sensor` object at `0x3FCC1894`.
+
+The SD phases put this crash before the first `loop` marker and before
+`wp-defer`, so the wallpaper raster has not loaded yet. A controlled hardware
+test then isolated the trigger: Wallpaper ON with "Motion brightens screen" OFF
+survived 12-15+ battery boots; turning Motion back ON eventually reproduced the
+same loop and exact BHI260 dump. The fix defers starting the persisted 10 Hz
+motion stream until 15 seconds after boot, after the wallpaper load/render and
+boot-current window.
+
+Hardware validation passed: 12-15+ battery cold boots with Wallpaper and "Motion
+brightens screen" both ON, motion brightening after the defer, and
+Daily/Defense/Offense wallpaper transitions all worked. The disproven 4 KB
+SD-read bounce buffer and temporary SD boot phase logging were then removed.
+Flash core-dump support and the extraction helper remain available for future
+exact diagnoses.
+
+The first cleaned build then regressed into repeated failures at the ARGUS boot
+screen. A freshly cleared and recaptured dump matched that cleaned ELF exactly
+and showed the same failure for a third time:
+`LilyGoUltra::loop -> SensorBHI260AP::update -> parse_fifo ->
+BoschParseStatic::parseData -> 0x3065A54A`. This proves the direct SD-to-PSRAM
+read was not involved. The 15-second motion-stream defer reduced exposure but
+did not protect against FIFO traffic produced during BHI260 startup.
+
+The evidence-backed follow-up patch changes SensorLib's three
+`BoschParseStatic` bridges to qualified, non-virtual `SensorBHI260AP` calls.
+The failing bridge now loads a fixed `SensorBHI260AP::parseData` address from
+firmware instead of loading an indirect target through the intermittently bad
+object vtable. `scripts/patch_sensorlib.py` applies this guarded patch to the
+pinned PlatformIO SensorLib dependency on clean builds. Patched firmware SHA256:
+`9A605B854AAD843021FDF409CB22A6652FCFFE96A115450AE5491B38DCD75785`.
+It was flashed and byte-verified. Final hardware validation passed: 12-15 battery
+cold boots with Wallpaper and "Motion brightens screen" enabled completed
+without another loop.
+
 Board / build facts you need up front:
 - USB flags live in `boards/lilygo-t-watch-ultra.json`, NOT `platformio.ini`:
   `-DARDUINO_USB_MODE=0` (TinyUSB OTG) and `-DARDUINO_USB_CDC_ON_BOOT=1`. This is

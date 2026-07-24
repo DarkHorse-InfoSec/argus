@@ -36,3 +36,16 @@ reaches the app CDC. Options to get the backtrace:
    this changes/kills the TinyUSB composite (CDC + the USB SD mass-storage feature), so
    use it only as a throwaway diagnostic build, not for shipping.
 Decode raw addresses with `xtensa-esp32s3-elf-addr2line` against firmware.elf.
+
+## Core-dump extraction in this repo
+- The Arduino-ESP32 S3 SDK used by PlatformIO already has
+  `CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y` and ELF output enabled.
+- `app3M_fat9M_16MB.csv` reserves a 64 KB `coredump` partition at `0xFF0000`.
+- Put the watch in download mode on COM19, then run:
+  `powershell -ExecutionPolicy Bypass -File .\tools\read_coredump.ps1 -Port COM19`
+- The helper reads that fixed partition with esptool because `esp-coredump` direct
+  flash mode otherwise expects a full ESP-IDF checkout and `parttool.py`, which the
+  PlatformIO Arduino package does not include.
+- The helper verifies the flashed app against the local `firmware.bin` before
+  decoding with `firmware.elf`. If the application SHA does not match, keep the
+  saved raw/core files and do not trust addresses mapped through another ELF.
