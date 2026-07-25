@@ -115,10 +115,11 @@ NOTE: NO jammers (illegal). Keep offensive tools behind the persona + an authori
 - [ ] BLE tail-detection: VERIFIED working (piggyback attach, no boot-loop). Decide: keep
       ARGUS_BLE_THREAT_PIPELINE=1 permanently; turn ARGUS_BLE_DETECT_DEBUG=0 after a real
       tracker-follow test confirms escalation. (main.cpp:80, ble_detect_pipeline.cpp)
-- [ ] Font licensing: title/wordmark fonts (font_dh_ui/argus/wordmark) are Bank Gothic Medium
-      BT (commercial). Before any PUBLIC push: swap to a free OFL look-alike (Saira Condensed
-      / Michroma / Oswald) and regenerate the 3 .c files, OR verify the EULA. Orbitron + VT323
-      are OFL (fine). Local commit already done (0f2c473).
+- [x] Font licensing: removed every Bank Gothic raster from the firmware. Regenerated
+      font_dh_ui/argus/wordmark from OFL Saira Condensed SemiBold and the five digital-clock
+      subsets from OFL Montserrat Medium. Added exact OFL notices and README credits for
+      Saira Condensed, Montserrat, Orbitron, and VT323. Built, flashed, and visually approved
+      on hardware on 2026-07-25. No commercial fonts remain in src/ or tools/.
 - [ ] Theme color picker in Settings (WDGWatch has one; ARGUS has argus_accent - make it
       user-selectable).
 
