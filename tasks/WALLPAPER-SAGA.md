@@ -63,6 +63,33 @@ It was flashed and byte-verified. Final hardware validation passed: 12-15 batter
 cold boots with Wallpaper and "Motion brightens screen" enabled completed
 without another loop.
 
+## Exact SensorLib root cause and final regression result, 2026-07-25
+
+A later controlled wallpaper/coexistence battery matrix reproduced one more
+reset=4 panic. An exact firmware-matched flash core dump again reached
+`BoschParseCallbackManager::call`, then jumped through an uninitialized callback
+entry to garbage PC `0x3225A54A`.
+
+The qualified `BoschParseStatic` bridge was working. The remaining defect was in
+SensorLib's GCC 8 `USE_CUSTOM_VECTOR` implementation: the callback manager's
+registered-callback-count member and `call()`'s FIFO payload-length parameter
+were both named `size`. The loop therefore used the payload length as the number
+of callbacks, walked beyond the initialized callback array, and invoked an
+uninitialized function pointer.
+
+The guarded dependency rewrite in `scripts/patch_sensorlib.py` now names the
+payload length `data_size`, bounds the custom-vector loop with `this->size`, and
+continues passing `data_size` to each valid callback. Generated source and
+disassembly were verified. The patched and flash-verified firmware SHA-256 is
+`35CBB2E710E5C73935214CB284302DE221AC83168AEC75219EB477359611363C`.
+
+The final battery matrix passed 32/32 cold boots: 12 with wallpaper and BLE
+keepalive, 9 with wallpaper plus BLE keepalive and WiFi at boot, and 11 with the
+same radios but wallpaper off. Every post-fix boot logged reset=1; none logged
+panic, watchdog, or brownout reset codes 4, 5, or 9. The failure was not a
+wallpaper brownout, so wallpaper timing and coexistence behavior were not
+weakened or disabled.
+
 Board / build facts you need up front:
 - USB flags live in `boards/lilygo-t-watch-ultra.json`, NOT `platformio.ini`:
   `-DARDUINO_USB_MODE=0` (TinyUSB OTG) and `-DARDUINO_USB_CDC_ON_BOOT=1`. This is
