@@ -134,6 +134,25 @@ Acceptance:
 - Threat-red flip still reads in every mode (amber base preserves it).
 - Duress fake-empty Offense screen suppresses the offense border (coercer sees a clean screen).
 
+CHROME vs ALERT rule (added 2026-07-30, after a real regression):
+`argus_accent()` (threat overlay) and `argus_base_accent()` (mode only) are NOT
+interchangeable, and "threat-red still reads in every mode" above must NOT be
+read as "on every surface".
+- **Screen chrome** (titles/headings, list accents, card borders, notification
+  banners) -> `argus_base_accent()`. Colour tracks the MODE only, so red appears
+  ONLY on the Offense side.
+- **Alert surfaces** (clock status icons via `status_accent_active()`, the
+  Threat Radar screen, the HexHound mood rings, the tail-timeline banner) ->
+  `argus_accent()` / explicit `HADES_RED`. Red there means "a threat is live
+  right now".
+Regression that motivated the rule: 47 chrome sites had been wired to
+`argus_accent()`, so a live WiFi/tracker threat turned every Defense-mode
+heading (TOOLS, TIME, WARDRIVER, MESHTASTIC, NODES, SEND MESSAGE,
+CONFIGURATION, SETTINGS, ...) HADES-red. That reads as "you are in Offense",
+which is exactly the mode-confusion the safety invariant at the top of this
+document exists to prevent. Fixed by moving all chrome to
+`argus_base_accent()`; the rule is documented on both functions in `theme.h`.
+
 ### P4 — Side-button knock detector (TEAM: input-knock) [needs P1 for `knock_armed()`]
 
 DESIGN NOTE / CONFLICT (do not silently resolve — carried to Open Decisions #2): the prompt says the knock is on "the SIDE BUTTON — the SAME physical button that opens Settings." In THIS firmware those are two different buttons. The PMU/side power button (`main.cpp:1721-1749`) cycles screens and is hardware-pre-classified (no raw edge timing — unusable for morse). The GPIO0 back button (`main.cpp:636-637/1751-1753/2059-2118`) is the one that opens Settings (`settings_screen_show()`, `settings_screen.cpp:1233`) and gives raw edges. The input team designed for GPIO0 because only it matches BOTH "opens Settings" and "gives morse timing." Confirm before building.
