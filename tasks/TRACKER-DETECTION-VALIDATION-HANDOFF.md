@@ -283,7 +283,7 @@ Controlled lab beacon:
 
 Use the isolated C6 package directory for C6 builds only:
 
-`$env:PLATFORMIO_PACKAGES_DIR='C:\Users\dlaur\.platformio\packages-c6lab'`
+`$env:PLATFORMIO_PACKAGES_DIR='<your PlatformIO home>\packages-c6lab'`
 
 `$env:PYTHONUTF8='1'`
 
@@ -370,9 +370,9 @@ Only after the accepted positive and negative tests:
    device was real or controlled.
 7. Report the final firmware SHA-256.
 
-Repository: D:\Projects\DarkHorse\Firmware\argus-watch  (T-Watch Ultra, ESP32-S3, LVGL 9)
+Repository: argus-watch  (T-Watch Ultra, ESP32-S3, LVGL 9)
 Work with argus-watch as your working directory; all paths below are relative to it.
-Build:  C:/Users/dlaur/.platformio/penv/Scripts/pio.exe run -d D:/Projects/DarkHorse/Firmware/argus-watch -e twatch_ultra
+Build:  pio run -e twatch_ultra   (from the repo root; the pio CLI may not be on PATH)
 Flash:  ...pio.exe run -d ... -e twatch_ultra -t upload --upload-port COM19
 COM ports: DOWNLOAD mode = 303A:1001 = COM19 (only this flashes; BOOT+RESET to enter). App CDC = 303A:8227 = COM20.
           Serial monitor: open with DTR=False/RTS=False (see tasks/FLASHING-NOTES.md) or the S3 drops to download mode.

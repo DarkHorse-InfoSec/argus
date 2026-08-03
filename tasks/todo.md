@@ -1,5 +1,117 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> SESSION 2026-08-03: charging indicator (BUILT + host-tested, PENDING FLASH) <<<
+
+User report: "when charging you have no idea, so an indicator to let you know
+that the battery is charging."
+
+ROOT CAUSE (not a missing feature; an invisible one). `update_battery()` in
+main.cpp already appended `LV_SYMBOL_CHARGE` to the battery label while
+`pmu.isCharging()` was true. That symbol is U+F0E7. `bat_label` is styled with
+`font_dh_mono_16`, a VT323 subset whose single cmap covers only U+0020..U+007E
+(`src/font_dh_mono_16.c:572`), and its `lv_font_t` never sets `.fallback`.
+LVGL found no glyph and drew nothing, so the charge state has been rendering
+as a trailing space since the font was swapped in. Nothing was wrong with the
+PMU read.
+
+FIX
+- `src/charge_state.h` (new, pure, C++11): `ChargeState` =
+  Discharging / Charging / Topped, `charge_state_raw()`, and `ChargeIndicator`,
+  a debouncer fed one sample per 1 Hz tick.
+  - Three states, not two: `isCharging()` goes false the moment the AXP2101
+    terminates, so a watch sitting full ON the charger looked identical to one
+    running on the cell. `Topped` = `isVbusIn() && !isCharging()`.
+  - Asymmetric debounce. Plug-in publishes immediately (that is the edge the
+    user is waiting on). Unplug holds 2 ticks (cable chatter on the pogo pins).
+    Charging <-> Topped holds 5 ticks, because near termination the PMU hunts
+    CC -> CV -> DONE -> CC and flips `isCharging()` every couple of seconds.
+    Publishing that raw would strobe the bolt, the same defect class as the
+    tracker threat-level strobe (b98cea8, e60a24f).
+- `src/main.cpp`: new `bat_bolt`, a 4-point lightning zigzag drawn with
+  `lv_line` inside the battery body at x=3..13, stroked white at width 2.
+  Primitives, not a font glyph, for the reason above and matching the existing
+  timer/stopwatch icons. White specifically, NOT `ARGUS_ACCENT` /
+  `status_accent_active()`: those flip to threat-red on a tail, and a battery
+  bolt is chrome, not a live-threat surface.
+  - Hidden when discharging; steady at full opacity when Topped; alternates
+    full <-> 40% line_opa once per 1 Hz tick while Charging. Pulse is driven
+    from the existing status tick, so no new timer and no new wake source.
+    Deliberately a slow breathe rather than a hard on/off blink, which on this
+    watch face reads as fault/alert.
+  - `line_opa` on the line itself, NOT `opa` on a wrapper: `opa` < 255 on a
+    parent makes LVGL composite the subtree through an intermediate layer
+    every redraw.
+  - `bat_charge.prime()` at the end of setup so a watch booted already on the
+    charger shows the bolt on the first frame.
+- `src/settings_screen.cpp`: System Info now reads `chg` / `full` / (nothing)
+  off the same `charge_state_raw()`, so the text readout cannot disagree with
+  the bolt. That path was always correct (plain ASCII), just three-state now.
+
+VERIFIED
+- Host suite: 11 new cases in `test/test_charge_state.cpp`. 1840 checks,
+  0 failures. The CC/CV/DONE hunt and the cable-chatter cases specifically
+  assert the bolt does NOT strobe.
+- `pio run -e twatch_ultra` SUCCESS.
+- Size delta measured against a stashed baseline build, since flash sits at
+  94.3%: +616 B flash (2967037 -> 2967653), +48 B RAM. Both percentages
+  unchanged (flash 94.3%, RAM 52.8%).
+- Bolt polyline rasterized offline: reads as a clean lightning bolt at 10x16,
+  and cannot collide with the digits (VT323 16 is monospace at 6 px/glyph, so
+  the widest reading "100%" spans x=16..40 inside the 56 px inner width).
+
+HARDWARE CONFIRMED 2026-08-03
+- Flashed over the USB-Serial-JTAG port (303A:1001), hash verified. NOTE: at
+  least one OTHER ESP32-S3 is attached to this machine and registers a stale
+  COM port that Windows lists as present but esptool cannot open. The ghost's
+  port number and MAC both DRIFT between sessions, so never hard-code either.
+  If an upload fails with "port doesn't exist", that is the wrong device, not a
+  broken watch. Identify the watch by the `pio device list` LOCATION field: the
+  live device has one, the ghost does not. Confirm with a read-only
+  `esptool.py ... flash_id` before writing.
+- After upload the app CDC (303A:8227) did not re-enumerate and stayed on the
+  JTAG identity through `--after hard_reset`. It came back on its own; an
+  RTS-driven reset does not physically detach USB, so the host keeps the old
+  enumeration cached. Not a boot failure - do not chase it as one.
+- User confirmed on the watch: clock + wallpaper in Daily mode, and the charging
+  bolt visible and pulsing while on the charger at 87%. The three-state design
+  is doing its job; steady-when-topped has not been observed yet.
+
+## >>> WARDRIVE VERIFICATION 2026-08-03: b98cea8 CONFIRMED on real data <<<
+
+Audited `/Wardrive/20260803_083714.csv` from that morning's commute session
+(08:37:44 -> 09:33:04 local, 697 rows, 541 WiFi / 156 BLE). This is the field
+verification `tasks/TRACKER-DETECTION-VALIDATION-HANDOFF.md` was waiting on for
+the position-stamping half of b98cea8.
+
+- **Old-bug signature GONE.** The pre-fix CSV had ZERO unknown-position rows
+  across 26 GPS dropouts, because `gps.location.isValid()` kept handing back
+  stale coordinates. This file has 3 honest `0,0` rows.
+- **The dropout is visible and correctly shaped.** AccuracyMeters blows past
+  150 m at 08:59:12-08:59:18 (HDOP degrading), then the stable lock drops and
+  rows go `0,0` at 08:59:25-08:59:32. Degrade-then-drop, ~20 s, exactly what a
+  tunnel or parking structure looks like. The old code would have stamped
+  last-known coordinates straight through it.
+- **Invariant holds exactly:** acc == 0 if and only if position is 0,0. Zero
+  violations in either direction.
+- **HDOP floor respected:** no positioned row below 5.0 m. Distribution 49.9%
+  at 5 m, 46.9% 5-15 m, 2.3% 15-50 m, 0.4% >150 m.
+- **Movement is real, not frozen:** 358 distinct latitudes over a ~16.8 x 5.5 km
+  box. A stale-coordinate bug would show clamped/repeating positions.
+- **Dedup intact:** 697 rows, 697 distinct MACs, 0 duplicates.
+- Cross-check: the 09:24 photo showed 331 WiFi / 95 BT mid-session; the finished
+  file holds 541/156. Consistent with a session still running at that moment.
+
+Blank-SSID rows re-examined (was 168, now 380 of 541 = 70%, high enough to
+re-check): still benign. 371 of 380 carry `[WPA2-PSK-CCMP][ESS]`, so they are
+infrastructure beacons, not misfiled client frames - the ESS capability bit is
+what `wifi_beacon_manager` filters on. 216 of 380 have the locally-administered
+bit set, which is how multi-BSSID APs derive virtual BSSIDs for hidden/backhaul
+SSIDs. Conclusion from the b98cea8 commit message stands; no action.
+
+STILL UNVERIFIED: the tracker/threat-decay half of b98cea8 (kSlowDecaySec=90),
+and the charge bolt's steady "Topped" state. If the bolt ever flickers between
+pulsing and steady near full, raise `CHARGE_SETTLE_TICKS` in `src/charge_state.h`.
+
 ## >>> SESSION 2026-07-24: exact panic captured and fixed <<<
 - Two exact matching core dumps were captured after the diagnostic flash. Both
   show `IllegalInstruction` in the same chain:
@@ -227,7 +339,7 @@ old firmware couldn't). "Nothing looks different" earlier = /Icons wasn't on the
   fits; AND surface the failure reason via low_mem_show_dialog (s_wd_start_err: "Out of
   memory" vs "WiFi could not start / turn Bluetooth off") instead of the silent revert.
 - CLOCK FACE -> BANK GOTHIC: regenerated lv_font_montserrat_clock_{56,72,96}.c from
-  D:/Projects/DarkHorse/_Brand/.../BankGothicMediumBT.ttf via gen_clock_font.py (now
+  a local commercial font file (not in this repo) via gen_clock_font.py (now
   argv-driven). Kept the var names = drop-in, no main.cpp change.
 - SECONDARY TEXT -> DARKHORSE ACCENT: tools/accentify_secondary_text.py rewrote 179
   neutral-grey text_color calls across 32 files (bright greys->ARGUS_ACCENT, dim->
@@ -351,7 +463,7 @@ instrumentation + smaller AM/PM. To pick them up: from stable download mode
    then I fix it and remove the DIAG. THIS is the first thing to do on return.
 2. AM/PM is now a smaller font (separate span). Verify it looks right.
 3. BACKGROUNDS: resized 410x502 PNGs are in
-   C:\Users\dlaur\Downloads\argus-backgrounds-410x502\ (DarkHorse/HADES/Privacy).
+   a local argus-backgrounds-410x502\ folder (not in this repo) (DarkHorse/HADES/Privacy).
    Copy these into the SD /backgrounds and DELETE the 1242x1242 originals (too big).
    wallpaper.png (= the Privacy image) is the auto-default find_wallpaper() loads.
    Stock-baked-into-firmware deferred (flash 86.4%; do later as a compressed PNG).
