@@ -1,4 +1,143 @@
-# DarkHorse ARGUS Watch — Fork Plan
+# DarkHorse ARGUS Watch - Fork Plan
+
+## >>> SESSION 2026-08-04: THE CLEAR-SKY WARDRIVE. GPS QUESTION CLOSED. <<<
+
+A 44-minute drive, 08:37:36-09:21:53, card pulled afterwards. This is the test
+the previous three sessions kept naming and could not run: "outdoors, clear sky.
+If TTFF there is fast and consistent, then everything this session is reception,
+and there is no hardware fault."
+
+Card archived to `artifacts/field/20260804/` (gitignored - it is raw survey
+output: real coordinates, real MACs, real detection history).
+
+### GPS: NO HARDWARE FAULT. THE INTERMITTENT-ANTENNA HYPOTHESIS IS DEAD.
+
+From `/Settings/gpshealth.log`, one unbroken GPS power cycle of 6919 s
+(1 h 55 m) that contains the whole drive:
+
+- `sats=12` on 43 of the 51 surviving lines, `bad=0` throughout, `bps` 1010-1142.
+- `sentencesWithFix` advances at exactly 2.00/s (60 per 30 s heartbeat, GGA+RMC
+  at 1 Hz). At the last good line, `fix=13802` against `on=6915s`: 6901 s of
+  fixed operation out of 6915 s powered, i.e. **99.8% fix retention**, and
+  `fix/2` extrapolates back through `on=0`, so TTFF for this cycle was
+  effectively zero (a hot start).
+- The only loss is at the very end: satellites go 12 -> 8 -> 5 -> 0 across
+  09:21:30-09:22:30 and `LOST` fires at 09:22:34, which is when the drive ended
+  and the watch went indoors at the destination. `bps` stays ~890-950 with
+  `bad=0` while `sats=0`, the same "alive, talking into the void" signature as
+  before - and here we know exactly what caused it, because it is a building.
+
+Combined with the earlier refutations (byte loss, slow acquisition, mode, USB,
+SD card), candidate (b) "intermittent antenna connection" is now refuted too:
+a flaky joint does not hold 12 satellites for 115 minutes of vibration in a
+moving vehicle. **It was always (a), shielding.** The 16-minute zeros of 08-03
+were a watch face-down indoors; the original "in a car" failure was a
+windshield plus an arm-down wrist. The firmware is innocent and always was.
+
+The product defect that made this take four sessions is already fixed (3bbf834
+explains WHY there is no fix, on screen and in the WarDrive gate). Nothing
+further to build here.
+
+INSTRUMENTATION GAP, worth knowing before relying on this log again: the 64 KB
+rotation discarded everything before 08:59:57, which is precisely the
+acquisition window. The TTFF number above is reconstructed from the
+`fix`-counter slope, not read from a START/LOCK pair, because those lines
+rotated away. A heartbeat that writes ~150 B every 30 s fills 64 KB in about
+3.5 h, so any session longer than that loses its own beginning. If acquisition
+timing matters again, either raise the cap or keep the first N lines of a power
+cycle across rotation.
+
+### WARDRIVE OUTPUT: CLEAN
+
+`/Wardrive/20260804_083736.csv`, 496 rows (368 WIFI, 128 BLE), 14 columns,
+WigleWifi-1.6 preamble intact.
+
+- **0 malformed rows, 0 duplicate MACs** (496 distinct MACs in 496 rows) - the
+  hash table and the CSV rewrite path are both behaving.
+- **0 zero-position rows**, consistent with a GPS that never lost lock during
+  the drive. Yesterday's run had 3, during a real dropout. The honest-0,0
+  behaviour from 236a180 is doing exactly what it should in both directions.
+- 285 distinct coordinates across 496 rows, most-repeated appearing 6 times -
+  no stuck position.
+- Track spans ~16.9 km N-S, ~5.6 km E-W, altitude 241-450 m. Plausible.
+- 69 of the rows are first-seen in the final minute at the destination, which
+  is a dense multi-SSID enterprise deployment, not a flush artifact: the
+  timestamps spread across 30 distinct seconds within that minute.
+
+### DEFECT FOUND AND FIXED: A BLANK SSID WAS NEVER BACKFILLED
+
+`drain_queue()` wrote `rec->ssid` only on the branch that CREATES a record. The
+update branch touched RSSI and position only. So whichever beacon happened to
+create the record decided that AP's name for the entire session, and if that
+first beacon carried no SSID the AP stayed blank no matter how many later
+beacons named it.
+
+MEASURED IMPACT, because the raw blank rate is misleading. 256 of 368 WiFi rows
+(69.6%) have an empty SSID, and that number invites the conclusion that we are
+losing most names. We are not. Cross-checking the two consecutive drives over
+the same route: of 233 WiFi MACs present in BOTH runs, 153 agreed blank, 77
+agreed named, and only **3 flipped** (2 named on 08-03 and blank on 08-04, 1 the
+other way). Across all 29 archived sessions only 5 MACs are ever both. So the
+~70% is overwhelmingly genuinely hidden APs, and the bug costs on the order of
+1% of names, not 70%. Recording that here because the tempting version of this
+finding is much bigger than the true one.
+
+Fixed anyway - it is three lines and strictly correct. Fill a blank from a
+later frame; never overwrite a name we already have, so a malformed or spoofed
+beacon cannot rewrite survey data. Detection logic is unaffected:
+`evil_twin_check()` runs on the raw beacon, not on the stored record.
+
+VERIFIED: firmware builds, RAM 53.3% / flash 94.6% - byte-identical footprint to
+the previous build. Host suite 4414 checks / 0 failures.
+
+### DETECTORS ON A REAL DRIVE
+
+`threat_log.txt` is `<boot_sec> <Category> <from>-><to>` and concatenates every
+boot, so it MUST be segmented on boot_sec resets before any rate is computed.
+It holds 5580 lines across 26 boot sessions; today is the last one.
+
+**The tracker strobe fix is confirmed in the field, across sessions in one
+file.** Airtag threat-level transitions per boot, with the count that occurred
+within 2 s of the previous one:
+
+  session   duration   transitions   sub-2s
+  seg 6      29086 s        806        382
+  seg 20      4666 s        415        162
+  seg 21      9120 s         53          7
+  seg 22     21033 s         22          1
+  seg 23     30646 s         18          0
+  seg 25      6572 s          2          0   <- today
+
+That is e60a24f and 236a180 landing and holding. Today the tracker indicator
+moved twice in 110 minutes and never sub-2 s.
+
+During the drive window itself: RogueAp 50 transitions (24 raise/clear cycles,
+median 22 s apart, levels 1-2), BeaconFlood 8, Surveillance 3, Airtag 0.
+
+THREE FALSE-POSITIVE MECHANISMS WORTH KNOWING BEFORE DEF CON. All three are
+"correct code, wrong conclusion" - none is a crash, and none is urgent:
+
+1. **Evil Twin fires on shared default SSIDs.** Both 08-03 and 08-04 flagged
+   SSID "STARLINK", same ROGUE BSSID on both days but a DIFFERENT "LEGIT"
+   BSSID each day. Two unrelated Starlink terminals broadcasting the vendor
+   default is not an evil twin, and whichever one we saw first becomes "legit".
+   A con floor is full of shared defaults.
+2. **BeaconFlood fires on dense enterprise APs.** All 8 transitions came in the
+   final 90 seconds, on arrival at a site with many virtual BSSIDs per radio.
+   That is a real beacon rate, just not an attack. A con floor is worse.
+3. **The tail detector called a LIKELY Vehicle tail.** A globally-unique (not
+   randomized) BLE MAC, 3 waypoints, 5669 m span, 12 min dwell, RSSI -47.
+   RSSI -47 sustained over 5.7 km means the device was almost certainly INSIDE
+   the car - the user's own phone, a passenger's, or the vehicle itself. This
+   is the expected failure mode of tail detection while wardriving in a car,
+   and it is what CounterTail's familiar list exists to absorb (one familiar
+   entry was written today).
+
+None of these is fixed. Logging them as known behaviour rather than opening
+work, because each needs a design decision about false-positive tolerance that
+should not be made unilaterally the week of the con.
+
+---
 
 ## >>> SESSION 2026-08-03b: GPS never locked / WarDrive unreachable (BUILT, PENDING FLASH) <<<
 
