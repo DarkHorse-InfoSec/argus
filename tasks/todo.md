@@ -1,5 +1,334 @@
 # DarkHorse ARGUS Watch — Fork Plan
 
+## >>> SESSION 2026-08-03b: GPS never locked / WarDrive unreachable (BUILT, PENDING FLASH) <<<
+
+User report: "I didn't get to WarDrive, GPS never kicked on, this is the second
+time that has happened." Conditions: outdoors but under cover / in a car. The
+user could not recall what the GPS screen's Satellites row had shown.
+
+WHAT THE ARTIFACTS SAY (not what was assumed). `/Settings/bledetect.log` on the
+SD logs every GPS cell transition, so time-to-first-fix is reconstructable for
+all 27 recorded sessions. GPS is NOT dead: it locked in 9-30 s in the early
+short sessions, but the recent ones are 527 s, 792 s, 1539 s, 3309 s, 8266 s,
+and two sessions never locked at all. The most recent session (ended 20:34,
+99 min long) took 3309 s to first fix. So both reported failures are sessions
+SHORTER than the time-to-first-fix, not a dead radio.
+
+WarDrive is downstream, not broken: `wardriver_screen.cpp:505` hard-gates START
+on `gps_screen_has_stable_lock()`, so no fix means the readiness dialog refuses
+the tap. Fixing GPS fixes WarDrive.
+
+TWO CANDIDATE ROOT CAUSES, and nothing on the device could tell them apart:
+1. NMEA byte loss. GPS is 38400 8N1 (3840 B/s) and `instance.gps.loop()` is
+   pumped once per main-loop iteration (`main.cpp:2486`). The ESP32 core
+   defaults HardwareSerial to a 256-byte RX ring = 67 ms of NMEA, while this
+   firmware's own comments record iterations of "hundreds of ms" under
+   wardriver load and a ~250 ms block in `start_wardriving()`. Every overflow
+   corrupts a sentence, TinyGPSPlus rejects it on checksum, and with enough
+   loss a module that HAS a fix never lands a parseable one inside
+   `gps_fresh()`'s 5 s window. Reads on screen as "never locked".
+2. Genuine RF cold start. A wrist GPS under cover / in a car may simply not
+   resolve, and t=3309 s was just when the sky opened up.
+
+Both are consistent with the evidence. Guessing between them is how this
+recurs, so this change fixes (1) - which is unambiguously wrong regardless -
+and instruments the discriminator so the next run answers it from an artifact.
+
+FIX
+- `src/gps_screen.cpp` `gps_uart_up()` (new): the single sanctioned
+  power-on ordering, `Serial1.end()` -> `setRxBufferSize(2048)` ->
+  `powerControl(POWER_GPS, true)`. `setRxBufferSize()` is a no-op while the
+  driver is installed, so it MUST sit in that window. 2048 B = 533 ms of
+  tolerance, covering the documented stalls. Deliberately not larger: the ring
+  is internal DRAM and this build is sensitive to the largest contiguous
+  internal block (tasks/COEXIST-NOTES.md). Replaces the duplicated end/power
+  sequence in `on_toggle()` and `gps_screen_restore_power()`.
+- `src/gps_screen.cpp` GPS HEALTH block (new): samples TinyGPSPlus's existing
+  `charsProcessed` / `passedChecksum` / `failedChecksum` / `sentencesWithFix`
+  counters, all baselined per power cycle. Two new GPS-screen rows (NMEA byte
+  rate, ok/bad checksums) and an SD log at `/Settings/gpshealth.log`, written
+  on START, on every stable-lock LOCK/LOST edge, and on a 30 s heartbeat.
+  Rotates at 64 KB. Carries NO position data, so it is safe to quote whole.
+
+HOW TO READ THE NEXT FAILURE, from `/Settings/gpshealth.log`:
+- `bps=0`                          -> no NMEA at all: rail, UART or wiring.
+- `bps` healthy, `bad` climbing    -> byte loss. Firmware. Raise the ring.
+- `bps` healthy, `bad` flat,
+  `sats>0`, `fix` flat             -> module fine, no sky. Not firmware.
+
+VERIFIED: firmware builds (RAM 52.9%, flash 94.5%); host suite 4343 checks /
+0 failures.
+
+### FIELD RESULT 2026-08-03 17:17-17:24 - BYTE LOSS IS REFUTED
+
+Flashed to the watch, ran 6 min indoors, read `/Settings/gpshealth.log`.
+
+Cause (1), NMEA byte loss, is DEAD. Across 6731 good sentences the failed-
+checksum count never moved off 1 (that one is the partial sentence at power-on),
+and the byte rate held steady at 805-936 B/s the entire run. The UART, the rail
+and the RX ring are all healthy. The 2 KB ring stays as correct hardening - 256
+bytes really is only 67 ms - but it is NOT the fix, and it should not be
+described as one.
+
+The immediate indoor lock does NOT validate the change either: the first log
+line shows a fix at on=0s with only 231 characters processed. That is a hot
+start on ephemeris retained from the fix ~2 h earlier, and it would have
+happened on the old firmware too.
+
+THE ACTUAL SIGNATURE. Satellites decay 6,6,7,4,6,5,8,3,3,4,4 and then collapse
+to 0, staying 0 for the last 90 s, while `bps` holds ~820 and `fix`
+(sentencesWithFix) freezes at 395. So the receiver is powered, running and
+streaming NMEA at full rate while tracking NOTHING. That is an RF/reception
+failure, not a firmware one. Candidate mechanisms, in order of testability:
+  a. 2.4 GHz desense from radios brought up alongside (BLE active scanning and
+     WiFi both transmit, not just receive).
+  b. BLDO1 sag under the added PMU load, which would cost RF sensitivity while
+     leaving the module's digital core happily streaming.
+  c. Coincidence: body/wrist position or moving deeper indoors.
+
+The user's account is that this followed a Daily -> Defense switch, but the log
+carried no mode or radio state, so that correlation rests on recollection. That
+is the same gap that made the original failures undiagnosable.
+
+### INSTRUMENTATION ROUND 2 (BUILT, PENDING FLASH)
+
+Every health line now carries `mode=` `ble=` `wifi=` `lora=` (via
+`argus_mode_current()`, `ble_scan_consumer_count()`,
+`wifi_radio_screen_is_powered()`, `lora_screen_is_powered()`), and a mode change
+writes an immediate `MODE` line rather than waiting up to 30 s for the next
+heartbeat. If satellites fall as those columns come up, it is (a) or (b); if
+they fall independently of them, it is (c).
+
+### FIELD RESULT ROUND 2 - THE FAILURE IS BINARY, AND SLOW ACQUISITION IS OUT
+
+Three sessions now, all on the round-1 build (no mode/radio columns yet):
+
+  s  window        len    max sats  lines w/ any sat  bytes/sentence
+  1  17:17-17:33   15 min     8            11             46.6
+  2  17:33-17:51   18 min     8            36             51.7
+  3  17:54-18:10   16 min     0             0             30.8
+
+Session 2 is a clean bill of health and the most useful line in the table: a
+COLD start indoors (0 sats at 30 s, 3 at 60 s, locked at 66 s) then 6-8
+satellites held for 18 unbroken minutes at ~900 B/s with bad=0. Indoor
+reception at that location is fine, and the receiver, UART and ring are all
+sound.
+
+Session 3, three minutes later, saw ZERO satellites for 16 minutes - not one
+line with a single satellite. Its low byte rate is a CONSEQUENCE, not a cause:
+sentences shrank 51.7 -> 30.8 bytes and the rate fell 17.6 -> 12.0/s, which is
+exactly what a receiver emits with nothing to report (empty GGA/RMC fields, a
+GSV reporting nothing in view). Alive, talking into the void.
+
+So the original "slow to lock" framing is wrong too. This is not slow
+acquisition. It is a total loss of reception that persists until something is
+reset, and the 55-minute TTFF was almost certainly this same condition ending.
+
+WHAT THE ARTIFACTS FIX IN TIME (everything else is inference, and was not
+recorded):
+- Flash completed just before 17:17:49 (first health line; the log only exists
+  in the new firmware), so USB was connected at ~17:17.
+- A 541 s hole in session 1's 30 s heartbeat, 17:24:01 -> 17:33:02 WITHIN one
+  GPS power cycle (on=371s -> on=912s), is the card being out of the watch
+  while it was read in the reader.
+- USB was connected again around 17:29-17:33 (app CDC enumerated as COM20).
+- USB is disconnected now.
+Nothing recorded the plug state during sessions 2 and 3. Note this cuts against
+a simple "USB noise did it" story: USB was connected right at session 2's
+start, and session 2 was healthy.
+
+### INSTRUMENTATION ROUND 3 (BUILT, PENDING FLASH)
+
+Every health line now carries `mode=` `ble=` `wifi=` `lora=` `usb=` `chg=`, and
+a mode change writes an immediate `MODE` line instead of waiting up to 30 s.
+`usb=`/`chg=` come straight from `instance.pmu.isVbusIn()/isCharging()`. This
+exists because the plug state could not be reconstructed after the fact, and
+the watch is necessarily on USB for every flash, so USB contaminates exactly
+the runs taken right after one.
+
+### A/B RESULT 2026-08-03 18:51-20:27 - MODE AND USB BOTH REFUTED
+
+95 minutes, one unbroken GPS power cycle, round-3 build. User-reported switch
+times (20:05 Defense, 20:15 Offense) match the logged MODE lines to the second,
+so the device clock is sound.
+
+  mode      lines   satellites
+  daily     146     137 lines at 12, 9 at 11
+  defense    23      22 lines at 12, 1 at 10
+  offense    24      24 lines at 12
+
+`lock=1 stable=1` on 193 of 193 lines. Zero LOST events. `bad=0` throughout.
+USB went 1 -> 0 at 19:55:05 and satellites sat at 12 on both sides of it.
+
+So the mode switch does nothing, and USB does nothing. Together with the earlier
+refutation of byte loss, every firmware-side hypothesis is now dead:
+  - NMEA byte loss / RX ring   REFUTED (bad=0 across ~93000 sentences)
+  - slow acquisition           REFUTED (66 s cold start; 12 sats for 95 min)
+  - Daily/Defense/Offense      REFUTED (no effect on any transition)
+  - USB charging noise         REFUTED (healthy plugged AND unplugged)
+
+WHAT IS LEFT is the one variable never recorded: physical reception. The dead
+runs are not degraded, they are absolute - 16 minutes of exactly zero
+satellites, receiver streaming a clean, checksum-valid sentence set that says
+"I see nothing". Two candidates remain, and they are NOT the same problem:
+  a. Shielding. Face-down on a desk, under something, in a bag, or the original
+     report's "in a car" - a metallised windshield plus an arm-down wrist is a
+     near-perfect GPS block. This is physics, and the firmware is innocent.
+  b. An intermittent antenna connection. The healthy/dead/healthy/dead
+     alternation across today's sessions is also the classic signature of a
+     flaky solder joint or connector, and that would be a HARDWARE fault worth
+     knowing about before DEF CON.
+
+THE REAL PRODUCT DEFECT, and it is ours either way: the user cannot tell (a)
+from (b) from a genuine failure. WarDrive answers a tap with a bare red X next
+to "GPS lock" and no account of why, and the GPS screen shows "--" identically
+for "no sky", "still acquiring" and "receiver dead". That is what turned a
+reception problem into three sessions of debugging.
+
+### NEW REPORT: "IT TAKES LONGER TO GET A GPS SIGNAL ONCE THE SD CARD IS IN"
+
+Reported 2026-08-03 after the Status row was confirmed working. Taken
+seriously: SD cards are aggressive broadband EMI sources, SD clock harmonics
+near GPS L1 (1575.42 MHz) are a known problem in GPS+SD designs this small, and
+write-current spikes are a second path to the same symptom. It also fits the
+ORIGINAL complaint better than anything else so far, because wardriving is the
+one feature that needs the card and a fix AT THE SAME TIME.
+
+THE INSTRUMENT REQUIRED THE THING IT MEASURES. The health log lives ON the SD
+card, so it could only ever observe the card-IN condition. Every session
+analysed today had the card in, because otherwise there was no log to read.
+Worse, the 30 s heartbeat ADDED SD writes that were not there before, so the
+instrument perturbs the effect under test.
+
+FIX - RAM BACKLOG (BUILT + HOST-TESTED, PENDING FLASH):
+- `GpsBacklog` in `src/gps_health.h`: pure index-math ring (head/count/dropped),
+  storage owned by the caller, so it is host-testable. Aggregate-initialised at
+  definition in gps_screen.cpp because `slot()` takes a modulo by capacity and
+  must never see 0.
+- `src/gps_screen.cpp`: records are now CAPTURED whether or not a card is
+  present and buffered in RAM when it is not; `gps_health_emit()` drains the
+  backlog oldest-first the moment a card appears. main.cpp already polls
+  card-detect and hot-mounts, so inserting the card mid-run writes the card-OUT
+  history retroactively with its original timestamps. A `card=` column now says
+  which condition each line was captured under.
+- Overflow keeps the NEWEST and reports `dropped` in the flush marker rather
+  than truncating silently: a backlog that quietly lost its head would misdate
+  an acquisition and send the next investigation the wrong way.
+- 48 records x 32 bytes = 1.5 KB static .bss (does not fragment the heap the
+  coexist work is sensitive to), ~24 min at the 30 s heartbeat.
+- `test/test_gps_health.cpp`: 5 ring cases - order when not full, exactly full,
+  overflow keeps newest with a correct dropped count, wrap after a flush (the
+  off-by-one that would silently corrupt ordering), and zero-capacity safety.
+
+VERIFIED: firmware builds (RAM 53.3%, flash 94.6%); host suite 4414/0.
+
+RESULT 2026-08-04, ON BATTERY, THREE ROUNDS - NOT SUPPORTED.
+
+Measured from the log rather than a stopwatch (`card=` column, START -> LOCK):
+
+  round   card OUT   card IN    favours the hypothesis?
+  1        48 s       289 s      yes
+  2       125 s        32 s      NO
+  3       168 s       777 s      yes
+
+  card out: 48-168 s     card in: 32-777 s
+
+Round 2's card-IN run locked faster than EVERY card-out run in the set. The
+ranges overlap and the overlap is not marginal, so three samples per arm with
+one clean contradiction does not establish an SD effect.
+
+An interim note here claimed "8-10x, and it runs against the confound". That
+was built on round 1 alone and is withdrawn: round 1 was reported by hand, and
+round 2 - the sample that could falsify it - was not. Read the log, not the
+stopwatch.
+
+WHAT THE DATA DOES SHOW: acquisition here is dominated by RECEPTION and swings
+from 32 s to 13 min largely regardless of the card. The failure mode is
+identical every time - zero satellites for minutes, a slow climb to 3, stuck
+there (4 are needed), then a fix the moment the 4th arrives. The 777 s run:
+8 min at sats=0 with bps ~370-460 and bad=0, sats=3 at 05:30, sats=4 and LOCK
+at 05:34:30. Byte rate tracks satellite count throughout (more GSV data), which
+is a good internal consistency check on the instrument itself.
+
+DECISION: do NOT build more for the card question. Settling it against that
+variance needs 8+ samples per arm in a fixed position, which is a lot of user
+time for a hypothesis the data does not favour. The backlog stays regardless -
+it closed a real blind spot and is the only reason card-out data exists.
+
+THE TEST THAT ACTUALLY MATTERS, STILL NOT RUN: outdoors, clear sky. If TTFF
+there is fast and consistent, then everything this session - the 16-minute
+zeros of 08-03, tonight's 13-minute crawl, and the original in-a-car failure -
+is reception, and there is no hardware fault. If it is STILL slow under open
+sky, that is the intermittent-antenna signal and it matters before DEF CON.
+
+### DEFECT IN THE STATUS DWELL, FOUND BY THE EXPERIMENT ITSELF (FIXED)
+
+The Status row's duration measured TIME IN THE CURRENT STATE and reset on every
+state change. With satellites flickering 0 -> 1 -> 0 the classification flaps
+NoSatellites <-> Acquiring, so the counter kept zeroing: a two-minute failure
+displayed as a timer that never climbed. Reported as "the time reset".
+
+Now measures TIME WITHOUT A FIX (`s_nofix_since_ms`), reset only on an actual
+stable lock, so it climbs monotonically through a failure and answers the
+question actually being asked. The state label and the duration are now
+independent, which is what they should always have been. Same accessor, so the
+WarDrive dialog inherits the fix.
+
+Incidentally confirms the receiver was intermittently SEEING a satellite during
+Arm B rather than sitting at a flat zero - a different picture from the
+16-minute absolute zeros of 2026-08-03.
+
+### RELEASE HYGIENE: THE 20 INHERITED UPSTREAM SCREENSHOTS ARE GONE
+
+`img/*.bmp` (20 files, 8.7 MB) were r3dfish's screenshots. Verified referenced
+by NOTHING: the README gallery uses `img/argus/*.png` throughout, and a
+repo-wide `git grep` finds no other user (the only `.bmp` hits are the
+screenshot FORMAT described in README and unrelated LVGL examples).
+
+Deleted rather than shipped with the previous session's black-box redactions:
+only 4 of the 20 were ever audited, the pre-commit hook cannot see inside
+images, and republishing someone else's captures under DarkHorse branding is
+the same act commit aae5d58 already declined for their mesh packets.
+Attribution in README and LICENSE is untouched.
+
+NOTE: the hook then blocked the README's own redaction. Zeroing the digits
+still leaves a 4-decimal coordinate PAIR, which is exactly what the rule
+matches, so a redaction that keeps the shape does not clear it. Replaced with
+`<lat>, <lon>` placeholders, which describe the badge format without pasting
+anything coordinate-shaped. The hook was right twice (it caught this note
+quoting the offending string too) and was not bypassed.
+
+### THE FIX: MAKE THE FAILURE LEGIBLE (BUILT + HOST-TESTED, PENDING FLASH)
+
+- `src/gps_health.h` (new, pure, C++11, no Arduino/LVGL): `GpsHealth` =
+  Off / NoData / NoSatellites / Acquiring / Locked, `gps_health_classify()`,
+  `gps_health_label()`, `gps_health_hint()`, `gps_health_duration()`.
+  Two ordering rules carry the weight, and both are pinned by tests:
+  - NoData is tested BEFORE NoSatellites. A silent link also reports zero
+    satellites, so the naive order tells a user with a dead receiver to go
+    outside. The link is the more specific and more actionable answer.
+  - NoData must PERSIST `kGpsNoDataDwellSec` (5 s) before it is believed. The
+    byte rate is legitimately 0 on the first sample of a power cycle, so
+    reporting instantly would flash a hardware fault at every power-on.
+  The byte floor is 20 B/s, deliberately near zero: the question is "is it
+  saying anything", not "is it saying much" (a receiver seeing nothing still
+  emits ~370 B/s of empty sentences).
+- `test/test_gps_health.cpp` (new): 11 cases on the boundaries between
+  explanations. Suite 4343 -> 4387 checks, 0 failures.
+- `src/gps_screen.{h,cpp}`: `gps_screen_health()` / `gps_screen_health_secs()`,
+  classified once per 1 Hz tick. New FIRST row on the GPS screen, "Status",
+  showing e.g. `No sats 3m12s`. `state=` added to every health-log line.
+- `src/wardriver_screen.cpp`: the readiness dialog's GPS line now carries the
+  reason and the dwell, e.g. `X GPS lock` + `Needs open sky (3m12s)` instead of
+  a bare red X.
+
+VERIFIED: firmware builds (RAM 52.9%, flash 94.6%); host suite 4387/0.
+UNVERIFIED until flashed: the on-screen rendering and the dialog layout.
+
+STILL OPEN, and NOT a firmware question: whether the dead runs were shielding
+or an intermittent antenna. Reproduce a zero-satellite state with CLEAR SKY
+overhead. If that reproduces, it is hardware, and worth knowing before DEF CON.
+
 ## >>> SESSION 2026-08-03: charging indicator (BUILT + host-tested, PENDING FLASH) <<<
 
 User report: "when charging you have no idea, so an indicator to let you know
