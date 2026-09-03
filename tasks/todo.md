@@ -1,4 +1,4 @@
-# DarkHorse ARGUS Watch - Fork Plan
+# ARGUS Watch - Fork Plan
 
 ## >>> SESSION 2026-09-03: SLOW GPS ACQUISITION. LOG REVIEW. <<<
 
@@ -834,7 +834,7 @@ screenshot FORMAT described in README and unrelated LVGL examples).
 
 Deleted rather than shipped with the previous session's black-box redactions:
 only 4 of the 20 were ever audited, the pre-commit hook cannot see inside
-images, and republishing someone else's captures under DarkHorse branding is
+images, and republishing someone else's captures under ARGUS branding is
 the same act commit aae5d58 already declined for their mesh packets.
 Attribution in README and LICENSE is untouched.
 
@@ -884,8 +884,8 @@ that the battery is charging."
 ROOT CAUSE (not a missing feature; an invisible one). `update_battery()` in
 main.cpp already appended `LV_SYMBOL_CHARGE` to the battery label while
 `pmu.isCharging()` was true. That symbol is U+F0E7. `bat_label` is styled with
-`font_dh_mono_16`, a VT323 subset whose single cmap covers only U+0020..U+007E
-(`src/font_dh_mono_16.c:572`), and its `lv_font_t` never sets `.fallback`.
+`font_argus_mono_16`, a VT323 subset whose single cmap covers only U+0020..U+007E
+(`src/font_argus_mono_16.c:572`), and its `lv_font_t` never sets `.fallback`.
 LVGL found no glyph and drew nothing, so the charge state has been rendering
 as a trailing space since the font was swapped in. Nothing was wrong with the
 PMU read.
@@ -1092,15 +1092,15 @@ BLE+WiFi+LoRa coexistence, then a batch of UI fixes.
 
 ---
 
-## >>> DARKHORSEIFY ROUND 6 (2026-07-21) <<<
+## >>> CUSTOMIZE ROUND 6 (2026-07-21) <<<
 Fixed the heading/boot-logo cream regression (28 titles -> argus_accent(); boot splash ->
 ARGUS_ACCENT). Then user: proceed with scroll perf (1) + 48px fonts (2); also "Time icons
-need DarkHorseifying" (3).
+need customizing" (3).
 - TIME ICONS (3): added alarm/stopwatch/timer/calendar glyphs to gen_icon_sprites.py (steel-
   blue), rendered + copied to SD /Icons/. time_screen.cpp: upgraded make_tile to the Tools
   gradient+rim style, added tile_icon() SD-load-w/-procedural-fallback, wired the 4 tiles.
-- 48px FONTS (2): generated SUBSET fonts (tiny flash) - font_dh_mono_48 (VT323, digits/colon
-  "0123456789:.- ") for alarm/stopwatch/timer big readouts; font_dh_label_48 (Orbitron,
+- 48px FONTS (2): generated SUBSET fonts (tiny flash) - font_argus_mono_48 (VT323, digits/colon
+  "0123456789:.- ") for alarm/stopwatch/timer big readouts; font_argus_label_48 (Orbitron,
   "START STOP") for wardriver button. Remaining montserrat_48 = 3 SYMBOL icons (kept).
 - SCROLL PERF (1): on_grid_scroll cb on tools_grid calls main_loop_request_lvgl_priority(8)
   each LV_EVENT_SCROLL, topping up the priority window so background ticks don't stutter the
@@ -1111,14 +1111,14 @@ need DarkHorseifying" (3).
 
 ---
 
-## >>> DARKHORSEIFY ROUND 5 (2026-07-21, flashed) <<<
+## >>> CUSTOMIZE ROUND 5 (2026-07-21, flashed) <<<
 User: Send Message not branded; ALL Tools/Time subpages need brand everywhere except heading;
 Tools scroll lags ("RAM issue?"). Viewed 5 submenu photos (wifi/wifi-pw/analyze/hexhound/pager
 - mostly good already).
-- SEND MESSAGE: its title was montserrat_36 (not Bank Gothic) - fixed to font_dh_ui. Body
+- SEND MESSAGE: its title was montserrat_36 (not Bank Gothic) - fixed to font_argus_ui. Body
   already Orbitron.
 - COMPREHENSIVE FONT SWEEP: prior sweep only hit montserrat_20. Generated Orbitron 14/16/28
-  (font_dh_label_14/16/28); tools/fontify_all.py migrated 109 more body labels across 28 files,
+  (font_argus_label_14/16/28); tools/fontify_all.py migrated 109 more body labels across 28 files,
   symbol-safe (11 protected) + keyboard-safe (kb keys are symbols) + matrix_bg excluded.
   48px (9 uses: START btn, stopwatch/timer digits) DEFERRED - flash-heavy at 48px.
 - Flash now 90.7% (2852405/3145728). ~293KB free. Deferring 48px fonts protects budget.
@@ -1133,13 +1133,13 @@ Tools scroll lags ("RAM issue?"). Viewed 5 submenu photos (wifi/wifi-pw/analyze/
 
 ---
 
-## >>> DARKHORSEIFY ROUND 4 (2026-07-20, flashed) <<<
+## >>> CUSTOMIZE ROUND 4 (2026-07-20, flashed) <<<
 Round 3 approved on hardware ("looks good"). This round:
 - CLOCK BIGGER: added lv_font_montserrat_clock_120 (Bank Gothic); CLOCK_TEXT_PAD_X 16->4 +
   CLOCK_LETTER_SPACE -3; the size selector measures WITH that spacing so 120px is chosen
   only when it fits (overflow-safe). Width-limited: "00:00" at 120px = ~400px of 402 usable.
 - BRAND FONT EXTENSION: tools/fontify_labels.py migrated 112 montserrat_20 labels ->
-  font_dh_label_20 (Orbitron) across 29 files. SYMBOL-SAFE: skips any label var that ever
+  font_argus_label_20 (Orbitron) across 29 files. SYMBOL-SAFE: skips any label var that ever
   holds LV_SYMBOL (8 protected: wifi/bt/gps/sd indicators, flock_icon, wardriver eye,
   threat_radar head). theme.h auto-added. Verified no symbol var got a brand font.
 - Flash now 89.9% (2826513/3145728) - WATCH THE BUDGET; baking more fonts into flash is
@@ -1150,7 +1150,7 @@ Round 3 approved on hardware ("looks good"). This round:
 
 ---
 
-## >>> DARKHORSEIFY ROUND 3 (2026-07-20, on-hardware iteration) <<<
+## >>> CUSTOMIZE ROUND 3 (2026-07-20, on-hardware iteration) <<<
 Wardriver now STARTS on hardware (PSRAM fix confirmed). This round from user feedback:
 - WARDRIVER doesn't STOP when pressed: stop_wardriving() (SD flush + WiFi.mode(WIFI_OFF))
   ran BEFORE the button label update, so the tap looked ignored. FIX: flip UI to START +
@@ -1159,15 +1159,15 @@ Wardriver now STARTS on hardware (PSRAM fix confirmed). This round from user fee
   ARGUS_TEXT/ARGUS_TEXT_DIM (cream) in theme.h; reverted 192 text_color spots.
 - CLOCK LARGER: lv_font_montserrat_clock_110 (Bank Gothic) prepended to the adaptive array.
 - BRAND FONTS (user: "don't make everything Bank Gothic"): Bank Gothic = wordmark/clock/
-  titles; Orbitron = labels (font_dh_label_20 -> tile labels/date/time tiles); VT323 =
-  readouts (font_dh_mono_16 -> battery/mesh). OFL TTFs fetched to tools/brandfonts/.
-  Watch-face symbol labels left in Montserrat (icons). See memory darkhorse-font-system.
+  titles; Orbitron = labels (font_argus_label_20 -> tile labels/date/time tiles); VT323 =
+  readouts (font_argus_mono_16 -> battery/mesh). OFL TTFs fetched to tools/brandfonts/.
+  Watch-face symbol labels left in Montserrat (icons). See memory argus-font-system.
 - NEXT: build (in progress) + flash; confirm on hardware.
 
 ---
 
-## >>> DARKHORSEIFY PASS (2026-07-20, differentiate from 13-37) <<<
-Directive: "how does this differ from r3dfish/13-37"; DarkHorse-brand the whole UI.
+## >>> CUSTOMIZE PASS (2026-07-20, differentiate from 13-37) <<<
+Directive: "how does this differ from r3dfish/13-37"; ARGUS-brand the whole UI.
 User chose the high-fidelity option for each: custom HD sprites, full custom
 watchface, Start-button explains-why.
 
@@ -1204,7 +1204,7 @@ TASKS:
 
 ---
 
-## >>> DARKHORSEIFY ROUND 2 (2026-07-20, on-hardware iteration) <<<
+## >>> CUSTOMIZE ROUND 2 (2026-07-20, on-hardware iteration) <<<
 Confirmed NEW firmware runs on watch (Start button now flips STOP->START = my code path;
 old firmware couldn't). "Nothing looks different" earlier = /Icons wasn't on the SD yet.
 
@@ -1217,7 +1217,7 @@ old firmware couldn't). "Nothing looks different" earlier = /Icons wasn't on the
 - CLOCK FACE -> BANK GOTHIC: regenerated lv_font_montserrat_clock_{56,72,96}.c from
   a local commercial font file (not in this repo) via gen_clock_font.py (now
   argv-driven). Kept the var names = drop-in, no main.cpp change.
-- SECONDARY TEXT -> DARKHORSE ACCENT: tools/accentify_secondary_text.py rewrote 179
+- SECONDARY TEXT -> ARGUS ACCENT: tools/accentify_secondary_text.py rewrote 179
   neutral-grey text_color calls across 32 files (bright greys->ARGUS_ACCENT, dim->
   ARGUS_ACCENT_DIM); only text_color, only neutral greys (semantic red/orange/green kept);
   theme.h auto-added where missing (0 files left missing).
@@ -1339,7 +1339,7 @@ instrumentation + smaller AM/PM. To pick them up: from stable download mode
    then I fix it and remove the DIAG. THIS is the first thing to do on return.
 2. AM/PM is now a smaller font (separate span). Verify it looks right.
 3. BACKGROUNDS: resized 410x502 PNGs are in
-   a local argus-backgrounds-410x502\ folder (not in this repo) (DarkHorse/HADES/Privacy).
+   a local argus-backgrounds-410x502\ folder (not in this repo) (ARGUS/HADES/Privacy).
    Copy these into the SD /backgrounds and DELETE the 1242x1242 originals (too big).
    wallpaper.png (= the Privacy image) is the auto-default find_wallpaper() loads.
    Stock-baked-into-firmware deferred (flash 86.4%; do later as a compressed PNG).
@@ -1354,7 +1354,7 @@ instrumentation + smaller AM/PM. To pick them up: from stable download mode
 Base: fork of `r3dfish/13-37` (upstream remote), branch `argus-argus`, LOCAL ONLY (no push yet).
 Goal: take the T-Watch Ultra to the next level for cybersecurity red/blue team,
 while keeping it a full watch (clock/alarms/timer/calendar). Bring ARGUS's
-engineering rigor (testable modules + host unit tests) and DarkHorse/HADES
+engineering rigor (testable modules + host unit tests) and ARGUS/HADES
 branding to the proven 13-37 base; cherry-pick Threat Radar (MIT) features.
 
 ## Phase 0 — Baseline — DONE (commit 8afd220)
@@ -1364,10 +1364,10 @@ branding to the proven 13-37 base; cherry-pick Threat Radar (MIT) features.
 - [x] Baseline flashed + confirmed on hardware (13-37 clock, upright/readable)
 - [x] Committed baseline
 
-## Phase 1 — Rebrand to DarkHorse ARGUS — DONE, HARDWARE-CONFIRMED
+## Phase 1 — Rebrand to ARGUS — DONE, HARDWARE-CONFIRMED
 - [x] Naming: FW_NAME ARGUS, Meshtastic names, matrix eggs (kept 1337 homage)
 - [x] src/theme.h; ARGUS_ACCENT steel-blue #9BBCD6 + HADES_RED #DB615A runtime flip
-- [x] Bank Gothic brand fonts (subset ARGUS/DARKHORSE + full-alphabet font_dh_ui 32px)
+- [x] Bank Gothic brand fonts (subset ARGUS/ARGUS + full-alphabet font_argus_ui 32px)
 - [x] 27 screen titles themed steel-blue; boot splash horse-head silhouette + wordmark
 - [x] VISUAL CONFIRMATION ON HARDWARE — flashed + eyeballed, upright/readable/on-brand
 
@@ -1378,8 +1378,8 @@ branding to the proven 13-37 base; cherry-pick Threat Radar (MIT) features.
 - [x] (Task #6) DONE — decrypt_ctr_n in src/meshtastic.cpp now calls
       wl::mesh::aes_ctr_xcrypt (byte-identical to the old mbedTLS path; include dropped)
 
-## Phase 3 — Threat Radar + pet + feeds — DONE (ported, DarkHorse-branded)
-- [x] HexHound pet replaces borrowed pwnpet (DarkHorse's own creature; layout tuned)
+## Phase 3 — Threat Radar + pet + feeds — DONE (ported, ARGUS-branded)
+- [x] HexHound pet replaces borrowed pwnpet (ARGUS's own creature; layout tuned)
 - [x] HexHound feeds from BLE / detectors / NFC / GNSS cells, not just WiFi
 - [x] Threat Radar rings + accent flips to HADES red under threat
 - [ ] Remaining Threat Radar extras (spatio-temporal tail classify, familiarity
@@ -1519,3 +1519,22 @@ BEFORE wiring hardware integration; cheaper than a flash cycle.
 ## Notes
 - Current D:\...\Firmware\argus repo kept as architecture/test REFERENCE.
 - Flash workflow + host-test toolchain gotchas: see session memory.
+
+
+## Publication rebrand audit (2026-09-02)
+- [x] Remove former organization text from tracked source, documentation, tooling, and generated HTML.
+- [x] Remove the Former organization boot wordmark and rename legacy font-prefix sources and identifiers to font_argus_*.
+- [x] Verify source and built firmware with a case-insensitive text/binary scan.
+- [x] Compile the complete twatch_ultra firmware.
+- [ ] Host suite: blocked by an existing test runner linkage defect. test_log_retention.cpp is compiled without src/detect/log_retention.cpp.
+
+### Review
+- Firmware build passed: twatch_ultra, 2,973,669 bytes flash, 174,768 bytes RAM.
+- Former-organization branding scan passed outside excluded .git metadata, .pio build cache, and artifacts.
+- The repository path, current branch, origin URL, and historical commits still contain the former organization name. These were deliberately not rewritten as part of the tracked-file rebrand.
+- Existing raster screenshots were inventoried. Automated visual inspection was unavailable because the image viewer could not access either D: or the sandbox copy; their binary payloads contained no searchable former-organization text.
+### Hardware deployment
+- [x] Flashed the branding-free ARGUS build to the watch on COM14 on 2026-09-02.
+      (Device identified by its ESP32-S3 MAC, which is deliberately not recorded
+      here - see scripts/pre-commit and the no-real-captured-data rule.)
+- Upload wrote bootloader, partition table, OTA data, and application image. Every region passed esptool hash verification, followed by an RTS hard reset.

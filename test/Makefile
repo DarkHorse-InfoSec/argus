@@ -1,4 +1,4 @@
-# Host unit tests for DarkHorse ARGUS — pure logic, NO hardware.
+# Host unit tests for ARGUS — pure logic, NO hardware.
 # Run:  make -C test test        (from the repo root)
 #
 # These compile with the host g++, not the ESP32 toolchain, so the security-

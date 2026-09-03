@@ -199,7 +199,7 @@ static lv_obj_t *bat_label;
 
 // Charging bolt drawn inside the battery body, left of the percentage.
 // Built from lv_line strokes rather than LV_SYMBOL_CHARGE: bat_label is
-// styled with font_dh_mono_16, a VT323 subset that only covers U+0020..U+007E
+// styled with font_argus_mono_16, a VT323 subset that only covers U+0020..U+007E
 // and declares no .fallback, so the U+F0E7 symbol glyph resolved to nothing
 // and the charge state rendered as an invisible trailing space. Same reason
 // the timer/stopwatch icons above are primitives.
@@ -305,7 +305,7 @@ static void build_battery_widget(lv_obj_t *screen)
     // battery body without clipping the digits.
     bat_label = lv_label_create(bat_body);
     lv_obj_set_style_text_color(bat_label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(bat_label, &font_dh_mono_16, LV_PART_MAIN);   // VT323 (brand readout)
+    lv_obj_set_style_text_font(bat_label, &font_argus_mono_16, LV_PART_MAIN);   // VT323 (brand readout)
     lv_label_set_text(bat_label, "--");
     lv_obj_align(bat_label, LV_ALIGN_CENTER, 0, 0);
 
@@ -447,7 +447,7 @@ static void update_analog_clock(const struct tm *t)
     lv_obj_set_style_transform_rotation(hand_sec,  s, LV_PART_MAIN);
 }
 
-// Status-bar "active" accent, threat-aware (DarkHorse -> HADES). Normally the
+// Status-bar "active" accent, threat-aware (ARGUS -> HADES). Normally the
 // bright steel-blue ARGUS_ACCENT_ACTIVE; the instant Threat Radar flags a tail
 // (top level >= TR_LVL_LIKELY) every live status icon flips to HADES red, so a
 // glance at the clock face shows the watch has "opened its red eyes". Refreshed
@@ -1415,12 +1415,11 @@ static void update_clock()
 // Firmware name + version surfaced in the boot banner so support tickets carry
 // a fixed anchor. Bump FW_VERSION on each cut.
 #define FW_NAME    "ARGUS"
-#define FW_VERSION "0.1.0"   // DarkHorse ARGUS fork of r3dfish/13-37 (base 1.0.0)
+#define FW_VERSION "0.1.0"   // ARGUS fork of r3dfish/13-37 (base 1.0.0)
 
 // Saira Condensed boot-splash fonts generated via lv_font_conv; see
-// src/font_dh_argus.c and src/font_dh_wordmark.c.
-LV_FONT_DECLARE(font_dh_argus);
-LV_FONT_DECLARE(font_dh_wordmark);
+// src/font_argus_argus.c.
+LV_FONT_DECLARE(font_argus_argus);
 
 void setup()
 {
@@ -1482,28 +1481,22 @@ void setup()
         }
     }
 
-    // Boot splash — DarkHorse ARGUS lockup on the panel before the clock comes up.
+    // Boot splash — ARGUS lockup on the panel before the clock comes up.
     // Backlight on now so it's visible; the splash stays up through the rest of
     // setup (screen construction) and is swapped for the clock below, held to a
-    // minimum visible time. Brand typeface is Saira Condensed (src/font_dh_*.c),
+    // minimum visible time. Brand typeface is Saira Condensed (src/font_argus_*.c),
     // filled steel-blue (#9BBCD6) on black — the sanctioned dark-surface treatment.
     instance.setBrightness(DEVICE_MAX_BRIGHTNESS_LEVEL);
     lv_obj_t *boot_splash = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(boot_splash, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_border_width(boot_splash, 0, LV_PART_MAIN);
 
-    // Small "DARKHORSE" wordmark above the ARGUS hero.
-    lv_obj_t *boot_wm = lv_label_create(boot_splash);
-    lv_label_set_text(boot_wm, "DARKHORSE");
-    lv_obj_set_style_text_color(boot_wm, ARGUS_ACCENT, LV_PART_MAIN);   // DarkHorse steel-blue
-    lv_obj_set_style_text_font(boot_wm, &font_dh_wordmark, LV_PART_MAIN);
-    lv_obj_align(boot_wm, LV_ALIGN_CENTER, 0, -46);
 
     // ARGUS hero.
     lv_obj_t *boot_brand = lv_label_create(boot_splash);
     lv_label_set_text(boot_brand, FW_NAME);   // "ARGUS"
-    lv_obj_set_style_text_color(boot_brand, ARGUS_ACCENT, LV_PART_MAIN);   // DarkHorse steel-blue
-    lv_obj_set_style_text_font(boot_brand, &font_dh_argus, LV_PART_MAIN);
+    lv_obj_set_style_text_color(boot_brand, ARGUS_ACCENT, LV_PART_MAIN);   // ARGUS steel-blue
+    lv_obj_set_style_text_font(boot_brand, &font_argus_argus, LV_PART_MAIN);
     lv_obj_align(boot_brand, LV_ALIGN_CENTER, 0, 8);
 
     lv_scr_load(boot_splash);
@@ -1566,7 +1559,7 @@ void setup()
     lv_label_set_text(wardriver_wifi_label, LV_SYMBOL_EYE_OPEN);
 
     wardriver_bt_label = lv_label_create(wardriver_container);
-    lv_obj_set_style_text_font(wardriver_bt_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wardriver_bt_label, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(wardriver_bt_label, lv_color_make(0x55, 0x99, 0xFF), LV_PART_MAIN);
     lv_label_set_text(wardriver_bt_label, "");
     lv_obj_add_flag(wardriver_bt_label, LV_OBJ_FLAG_HIDDEN);
@@ -1602,7 +1595,7 @@ void setup()
     // LoRa icon. White count on a red pill, hidden when count == 0.
     mesh_top_count_label = lv_label_create(clock_screen);
     lv_obj_set_style_text_color(mesh_top_count_label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(mesh_top_count_label, &font_dh_mono_16, LV_PART_MAIN);   // VT323 (brand readout)
+    lv_obj_set_style_text_font(mesh_top_count_label, &font_argus_mono_16, LV_PART_MAIN);   // VT323 (brand readout)
     lv_obj_set_style_bg_color(mesh_top_count_label, lv_color_make(0xC0, 0x20, 0x20), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(mesh_top_count_label, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_radius(mesh_top_count_label, 8, LV_PART_MAIN);
@@ -1648,7 +1641,7 @@ void setup()
 
     date_label = lv_label_create(clock_screen);
     lv_obj_set_style_text_color(date_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(date_label, &font_dh_label_20, LV_PART_MAIN);   // Orbitron (brand label)
+    lv_obj_set_style_text_font(date_label, &font_argus_label_20, LV_PART_MAIN);   // Orbitron (brand label)
     lv_obj_set_style_text_align(date_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_label_set_text(date_label, "");
     lv_obj_align(date_label, LV_ALIGN_CENTER, 0, 60);
@@ -1720,7 +1713,7 @@ void setup()
 
     // Discovery count
     airtag_count_label = lv_label_create(airtag_indicator);
-    lv_obj_set_style_text_font(airtag_count_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(airtag_count_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(airtag_count_label, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(airtag_count_label, "0");
 
@@ -1762,7 +1755,7 @@ void setup()
     lv_obj_align(flipper_eye, LV_ALIGN_LEFT_MID, 4, -1);
 
     flipper_count_label = lv_label_create(flipper_indicator);
-    lv_obj_set_style_text_font(flipper_count_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(flipper_count_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(flipper_count_label, lv_color_make(0xFF, 0x88, 0x00), LV_PART_MAIN);
     lv_label_set_text(flipper_count_label, "0");
 
@@ -1794,12 +1787,12 @@ void setup()
     lv_obj_clear_flag(sk_badge, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *sk_lbl = lv_label_create(sk_badge);
-    lv_obj_set_style_text_font(sk_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(sk_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(sk_lbl, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(sk_lbl, "SK");
 
     skimmer_count_label = lv_label_create(skimmer_indicator);
-    lv_obj_set_style_text_font(skimmer_count_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(skimmer_count_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(skimmer_count_label, lv_color_make(0xFF, 0x66, 0x66), LV_PART_MAIN);
     lv_label_set_text(skimmer_count_label, "0");
 
@@ -1833,12 +1826,12 @@ void setup()
     lv_obj_clear_flag(et_badge, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *et_lbl = lv_label_create(et_badge);
-    lv_obj_set_style_text_font(et_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(et_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(et_lbl, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(et_lbl, "ET");
 
     evil_twin_count_label = lv_label_create(evil_twin_indicator);
-    lv_obj_set_style_text_font(evil_twin_count_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(evil_twin_count_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(evil_twin_count_label, lv_color_make(0xFF, 0x88, 0x00), LV_PART_MAIN);
     lv_label_set_text(evil_twin_count_label, "0");
 
@@ -1863,7 +1856,7 @@ void setup()
     lv_label_set_text(flock_icon, LV_SYMBOL_WARNING);
 
     flock_count_label = lv_label_create(flock_indicator);
-    lv_obj_set_style_text_font(flock_count_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(flock_count_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(flock_count_label, lv_color_make(0xFF, 0x88, 0x00), LV_PART_MAIN);
     lv_label_set_text(flock_count_label, "0");
 
@@ -2197,7 +2190,7 @@ void low_mem_show_dialog(const char *msg)
     lv_obj_add_event_cb(btn, low_mem_dialog_ok, LV_EVENT_CLICKED, NULL);
     lv_obj_t *btn_lbl = lv_label_create(btn);
     lv_label_set_text(btn_lbl, "OK");
-    lv_obj_set_style_text_font(btn_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(btn_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(btn_lbl, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(btn_lbl);
 }

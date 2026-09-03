@@ -57,13 +57,13 @@ static void show_banner(const notify::Notification &n)
 
     // Header: bell + app/source name in the accent colour.
     lv_obj_t *app = lv_label_create(s_banner);
-    lv_obj_set_style_text_font(app, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(app, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_color(app, argus_base_accent(), LV_PART_MAIN);
     lv_label_set_text_fmt(app, LV_SYMBOL_BELL "  %s", n.app[0] ? n.app : "Notification");
 
     if (n.title[0]) {
         lv_obj_t *title = lv_label_create(s_banner);
-        lv_obj_set_style_text_font(title, &font_dh_label_16, LV_PART_MAIN);
+        lv_obj_set_style_text_font(title, &font_argus_label_16, LV_PART_MAIN);
         lv_obj_set_style_text_color(title, ARGUS_TEXT, LV_PART_MAIN);
         lv_obj_set_width(title, LV_PCT(100));
         lv_label_set_long_mode(title, LV_LABEL_LONG_DOT);   // one-line, ellipsized
@@ -71,7 +71,7 @@ static void show_banner(const notify::Notification &n)
     }
     if (n.body[0]) {
         lv_obj_t *body = lv_label_create(s_banner);
-        lv_obj_set_style_text_font(body, &font_dh_label_14, LV_PART_MAIN);
+        lv_obj_set_style_text_font(body, &font_argus_label_14, LV_PART_MAIN);
         lv_obj_set_style_text_color(body, ARGUS_TEXT_DIM, LV_PART_MAIN);
         lv_obj_set_width(body, LV_PCT(100));
         lv_label_set_long_mode(body, LV_LABEL_LONG_WRAP);

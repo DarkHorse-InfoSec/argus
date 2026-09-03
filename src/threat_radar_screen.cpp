@@ -1,6 +1,6 @@
 #include "threat_radar_screen.h"
 #include "threat_radar.h"
-#include "theme.h"                 // argus_accent() — dynamic DarkHorse->HADES accent
+#include "theme.h"                 // argus_accent() — dynamic ARGUS->HADES accent
 #include "tools_screen.h"          // tools_screen_show() for the back-gesture
 #include <lvgl.h>
 #include <stdio.h>
@@ -55,7 +55,7 @@ static void add_row(const TrThreat *t)
     lv_obj_align(bar, LV_ALIGN_LEFT_MID, -6, 0);
 
     // Headline: "AirTag - LIKELY" (greyed when contact has gone stale).
-    // Separators here are ASCII on purpose: font_dh_label_* cover U+0020..U+007E
+    // Separators here are ASCII on purpose: font_argus_label_* cover U+0020..U+007E
     // only, and LVGL's built-in Montserrat adds just U+00B0 and U+2022 on top of
     // ASCII. A "·" or an em dash renders as a tofu box on the device.
     lv_obj_t *head = lv_label_create(row);
@@ -80,7 +80,7 @@ static void add_row(const TrThreat *t)
 
     // Footer: first-seen time, proximity (RSSI), MAC tail.
     lv_obj_t *f = lv_label_create(row);
-    lv_obj_set_style_text_font(f, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(f, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_color(f, ARGUS_TEXT_DIM, LV_PART_MAIN);
     lv_label_set_text_fmt(f, "first %s  -  %d dBm  -  ..%02X:%02X:%02X",
         t->first_time, (int)t->best_rssi, t->mac[3], t->mac[4], t->mac[5]);
@@ -98,7 +98,7 @@ static void refresh()
 
     // Banner reflects the worst live contact. LIKELY+ paints the HADES alert red
     // (matching argus_accent()'s flip); a clear scope rests on the calm steel-blue
-    // brand accent, so the whole screen shifts DarkHorse -> HADES with the threat.
+    // brand accent, so the whole screen shifts ARGUS -> HADES with the threat.
     lv_color_t bcol;
     const char *btext;
     if (top >= TR_LVL_LIKELY) {
@@ -119,7 +119,7 @@ static void refresh()
 
     if (n == 0) {
         lv_obj_t *empty = lv_label_create(s_list);
-        lv_obj_set_style_text_font(empty, &font_dh_label_16, LV_PART_MAIN);
+        lv_obj_set_style_text_font(empty, &font_argus_label_16, LV_PART_MAIN);
         lv_obj_set_style_text_color(empty, ARGUS_TEXT_DIM, LV_PART_MAIN);
         lv_label_set_text(empty,
             "No co-moving devices.\n\n"
@@ -168,7 +168,7 @@ void threat_radar_screen_create()
     // a tail is flagged (repainted each refresh() below) and returns to calm
     // steel-blue when clear.
     s_title = lv_label_create(s_screen);
-    lv_obj_set_style_text_font(s_title, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(s_title, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(s_title, argus_accent(), LV_PART_MAIN);
     lv_label_set_text(s_title, "THREAT RADAR");
     lv_obj_align(s_title, LV_ALIGN_TOP_MID, 0, 28);
@@ -182,7 +182,7 @@ void threat_radar_screen_create()
     lv_obj_clear_flag(s_banner, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(s_banner, LV_ALIGN_TOP_MID, 0, 58);
     s_banner_lbl = lv_label_create(s_banner);
-    lv_obj_set_style_text_font(s_banner_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(s_banner_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(s_banner_lbl, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(s_banner_lbl);
 

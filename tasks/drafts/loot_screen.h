@@ -3,7 +3,7 @@
 
 // DRAFT (not yet in the build - lives in tasks/drafts/). Move to src/ + wire the
 // integration lines from tasks/OFFENSE-BUILD-DESIGNS.md to activate. Adaptation
-// notes vs the raw draft: title font_dh_ui (Bank Gothic, banned) -> font_dh_label_28;
+// notes vs the raw draft: title font_argus_ui (Bank Gothic, banned) -> font_argus_label_28;
 // verify lv_event_get_target_obj against the pinned LVGL 9 version before building.
 //
 // Loot manager (OFFENSE mode only): lists captured engagement artifacts on the

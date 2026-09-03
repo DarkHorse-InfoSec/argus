@@ -245,7 +245,7 @@ print("rendered:", ", ".join(imgs))
 def b64(p): return base64.b64encode(open(os.path.join(OUT,p),'rb').read()).decode()
 STAGES=[("egg","Egg","#8a8a8a","01"),("pup","Packet Pup","#00e5ff","02"),
         ("beast","Beacon Beast","#ffb020","03"),("gremlin","Gremlin Mode","#3dff6e","04"),
-        ("sentinel","DarkHorse Sentinel","#ff423a","05")]
+        ("sentinel","Sentinel","#ff423a","05")]
 cells="\n".join(f'''<figure style="--a:{a}"><img src="data:image/png;base64,{b64(f"hd_{k}.png")}" alt="{lab}">
   <figcaption><span class="n">{n}</span> {lab}</figcaption></figure>''' for k,lab,a,n in STAGES)
 html=f'''<title>HexHound - HD remaster set</title>
@@ -262,7 +262,7 @@ html=f'''<title>HexHound - HD remaster set</title>
  footer{{border-top:1px solid var(--line);margin-top:30px;padding-top:20px;color:var(--muted);font-size:.84rem;line-height:1.7}} footer b{{color:var(--ink)}}
 </style>
 <div class="wrap">
- <p class="eyebrow">DarkHorse ARGUS &middot; HexHound</p>
+ <p class="eyebrow">ARGUS &middot; HexHound</p>
  <h1>HD remaster &mdash; full evolution set</h1>
  <p class="lede">All five stages remastered from your <code>sprites.h</code> designs: same silhouettes and
  stage-accent colors, now shaded with panel/fur detail and neon bloom. These render per evolution

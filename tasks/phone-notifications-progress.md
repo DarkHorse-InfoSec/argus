@@ -69,7 +69,7 @@ To run the 4 PM iPhone test on the spike: see 4pm-pairing-checklist below.
 ## Phase 3 - Android via Gadgetbridge   [CODE-COMPLETE, in final build]
 - [x] research done: emulate InfiniTime/PineTime; notifications via STANDARD
       Alert Notification Service (0x1811) New Alert char (0x2A46). Gadgetbridge
-      supports this out of the box. No DarkHorse app.
+      supports this out of the box. No ARGUS app.
 - [x] src/ans.cpp: ANS GATT server, advertises name "InfiniTime", minimal Device
       Info Service (fw 1.7.0), parses <category><count>\0<title>\0<body> -> publish.
 - [x] platform picker (iPhone/Android) on the Notify screen -> device_mode starts

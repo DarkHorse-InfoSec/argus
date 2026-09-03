@@ -1,7 +1,7 @@
 # ARGUS on the wrist at DEF CON 34 - con-readiness audit
 
 Answers the questions in a local `QUESTIONS-FOR-ARGUS-REPO-20260728.txt` (not in this repo).
-Audited 2026-07-28 against the working tree at branch `darkhorse-argus`, HEAD `6e9b14b`.
+Audited 2026-07-28 against the working tree at branch `argus-argus`, HEAD `6e9b14b`.
 Every claim below is from the code, not the README.
 
 Scope note: this file is about **ARGUS on the T-Watch Ultra**. It says nothing
@@ -288,10 +288,21 @@ hostile venue.
 card is unmounted, so between now and Aug 6 these files will refill with home
 data. Repeat the wipe immediately before you leave.
 
-**STILL OUTSTANDING - `/Wardrive/`.** 28 CSVs, 896 KB, spanning 07-20 to 07-28,
-at full WiGLE precision over the home area. Kept by decision (they may be queued
-for WiGLE upload) but flagged to **move off the card before the con**. Note one
-was written today, `20260728_130845.csv`, so this set is still growing.
+**`/Wardrive/` - RESOLVED 2026-08-04.** Was 28 CSVs at the 07-28 audit; the set
+kept growing exactly as predicted and reached **31 CSVs, 252 KB, 07-20 through
+08-04**, about 2,268 rows carrying a real position at full WiGLE precision. The
+08-03 and 08-04 files are consecutive 08:37 commutes over the same route, so the
+set described a routine, not just an address.
+
+Backed up twice and hash-verified (SHA256, 31/31 identical, 0 missing) before
+deletion, then removed from the card. `E:\Wardrive` now holds 0 entries.
+
+- `artifacts/field/20260804/Wardrive/` (in-repo, gitignored)
+- `D:\Projects\ARGUS\Firmware\_argus-field-backup\wardrive-20260804\`
+  (outside the repo tree, because a gitignore rule is a thin barrier around real
+  coordinates in a repo being prepped for public release)
+
+Nothing is lost for WiGLE upload; both copies are complete and byte-identical.
 
 **Updated one-sentence answer**, accurate as of this change:
 

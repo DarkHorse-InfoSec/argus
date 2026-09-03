@@ -5,7 +5,7 @@ Work with argus-watch as your working directory; all paths below are relative to
 Build:  pio run -e twatch_ultra   (from the repo root; the pio CLI may not be on PATH)
 Flash:  ...pio.exe run -d ... -e twatch_ultra -t upload --upload-port COM19
 COM ports: DOWNLOAD mode = 303A:1001 = COM19 (only this flashes; BOOT+RESET to enter). App CDC = 303A:8227 = COM20.
-GIT: branch darkhorse-argus. The font work is present in the working tree and is NOT committed or pushed. Do not
+GIT: branch argus-argus. The font work is present in the working tree and is NOT committed or pushed. Do not
      discard it. Preserve every untracked tasks/*-HANDOFF.md document. Do not commit or push unless Domenic explicitly
      asks. No Co-Authored-By lines and no em dashes.
 
@@ -24,9 +24,9 @@ date, Time/Tools tile labels, and Settings typography all look great.
 
 >>> WHAT WAS ACTUALLY WRONG <<<
 The original handoff correctly identified these three commercial Bank Gothic brand rasters:
-  1. src/font_dh_ui.c
-  2. src/font_dh_argus.c
-  3. src/font_dh_wordmark.c
+  1. src/font_argus_ui.c
+  2. src/font_argus_argus.c
+  3. src/font_argus_wordmark.c
 
 However, its statement that the Montserrat clock files were already OFL was incorrect. Inspection found that all five
 files named lv_font_montserrat_clock_* were actually generated from BankGothicMediumBT.ttf:
@@ -42,12 +42,12 @@ their misleading Montserrat symbol and filenames.
 
 >>> IMPLEMENTED FIX <<<
 Brand fonts:
-  - Regenerated src/font_dh_ui.c from Saira Condensed SemiBold at 32 px, 4 bpp, no compression, printable ASCII
-    range 0x20-0x7F. Preserved public symbol font_dh_ui.
-  - Regenerated src/font_dh_argus.c from Saira Condensed SemiBold at 88 px, 4 bpp, no compression, symbols ARGUS.
-    Preserved public symbol font_dh_argus.
-  - Regenerated src/font_dh_wordmark.c from Saira Condensed SemiBold at 40 px, 4 bpp, no compression, symbols
-    DARKHORSE. Preserved public symbol font_dh_wordmark.
+  - Regenerated src/font_argus_ui.c from Saira Condensed SemiBold at 32 px, 4 bpp, no compression, printable ASCII
+    range 0x20-0x7F. Preserved public symbol font_argus_ui.
+  - Regenerated src/font_argus_argus.c from Saira Condensed SemiBold at 88 px, 4 bpp, no compression, symbols ARGUS.
+    Preserved public symbol font_argus_argus.
+  - Regenerated src/font_argus_wordmark.c from Saira Condensed SemiBold at 40 px, 4 bpp, no compression, symbols
+    ARGUS. Preserved public symbol font_argus_wordmark.
 
 Digital clock:
   - Regenerated all five lv_font_montserrat_clock_* files from the verified Montserrat Medium TTF bundled with LVGL.
@@ -98,9 +98,9 @@ Final PlatformIO build:
     9215BAC44D19AE488B2D2A37A515DF92B66F39BD666110F8C7DB624BC7D2C124
 
 The final ELF contains all eight required public font symbols:
-  font_dh_argus
-  font_dh_ui
-  font_dh_wordmark
+  font_argus_argus
+  font_argus_ui
+  font_argus_wordmark
   lv_font_montserrat_clock_56
   lv_font_montserrat_clock_72
   lv_font_montserrat_clock_96
@@ -120,9 +120,9 @@ menu typography. No missing glyphs, clipping, overlap, or spacing problem was re
 >>> FILES IN THIS FONT-LICENSING CHANGE <<<
 Expected tracked modifications:
   README.md
-  src/font_dh_argus.c
-  src/font_dh_ui.c
-  src/font_dh_wordmark.c
+  src/font_argus_argus.c
+  src/font_argus_ui.c
+  src/font_argus_wordmark.c
   src/lv_font_montserrat_clock_56.c
   src/lv_font_montserrat_clock_72.c
   src/lv_font_montserrat_clock_96.c

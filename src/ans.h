@@ -6,7 +6,7 @@
 // as a GATT SERVER. Gadgetbridge writes each phone notification to the New Alert
 // characteristic (0x2A46); we parse it and push it into notify::center().
 //
-// No DarkHorse app to build or maintain - the user installs Gadgetbridge and it
+// No ARGUS app to build or maintain - the user installs Gadgetbridge and it
 // forwards notifications to us over the standard service.
 //
 // This is the mirror image of ancs.h: there the watch is a GATT client to iOS;

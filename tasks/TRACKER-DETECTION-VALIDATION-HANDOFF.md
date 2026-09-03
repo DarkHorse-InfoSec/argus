@@ -254,7 +254,7 @@ Host validation:
 
 Use this test command. Plain `bash` invokes WSL and lacks the required g++:
 
-`C:\msys64\usr\bin\bash.exe -lc 'export PATH=/usr/bin:/mingw64/bin:$PATH; cd /d/Projects/DarkHorse/Firmware/argus-watch; ./test/run.sh'`
+`C:\msys64\usr\bin\bash.exe -lc 'export PATH=/usr/bin:/mingw64/bin:$PATH; cd /d/Projects/ARGUS/Firmware/argus-watch; ./test/run.sh'`
 
 Current watch image:
 - RAM: 173112 / 327680, 52.8%
@@ -376,7 +376,7 @@ Build:  pio run -e twatch_ultra   (from the repo root; the pio CLI may not be on
 Flash:  ...pio.exe run -d ... -e twatch_ultra -t upload --upload-port COM19
 COM ports: DOWNLOAD mode = 303A:1001 = COM19 (only this flashes; BOOT+RESET to enter). App CDC = 303A:8227 = COM20.
           Serial monitor: open with DTR=False/RTS=False (see tasks/FLASHING-NOTES.md) or the S3 drops to download mode.
-GIT: branch darkhorse-argus, HEAD ~ 6e9b14b (reliability + fonts all committed; tree clean but for untracked tasks/*-HANDOFF.md).
+GIT: branch argus-argus, HEAD ~ 6e9b14b (reliability + fonts all committed; tree clean but for untracked tasks/*-HANDOFF.md).
      Do NOT commit or push unless Domenic explicitly asks. Preserve the untracked handoff docs. No Co-Authored-By, no em dashes.
 
 READ FIRST: tasks/ROADMAP.md (the ARGUS_BLE_DETECT_DEBUG item + the "identity guardrail"), tasks/FLASHING-NOTES.md,

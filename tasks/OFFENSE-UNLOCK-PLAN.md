@@ -63,7 +63,7 @@ Acceptance: L-S-L on GPIO0 reliably opens the pad; a plain long still goes home 
 
 ### Same-session bug fixes (2026-07-22, from on-wrist photos)  [BUILT, compiles clean, awaiting re-verify]
 - **DEF/OFF chip clipped by the rounded corner.** Two causes, fixed in two passes. (1) `LV_OBJ_FLAG_IGNORE_LAYOUT` on the chip dropped `lv_obj_align`'s offset, pinning it to (0,0) - removed the flag. (2) Even aligned, `16,44` still sat inside the top-left corner curve (the AMOLED physically masks corner pixels; the status icons clear it by sitting ~70px inset on the right at `TOP_RIGHT,-70,20`). Final fix (`theme.cpp` `argus_mode_indicator_init`): absolute `lv_obj_set_pos(chip, 24, 72)` - below the top curve (matching the notify banner's y=72 clearance), no align-resolution ambiguity.
-- **PIN pad backspace/OK keys were empty "tofu" squares.** Root cause: the keypad matrix used `font_dh_label_28`, an Orbitron subset carrying only digits/colon/space/AMP, so `LV_SYMBOL_BACKSPACE`/`LV_SYMBOL_OK` had no glyphs. Fix (`pin_pad_screen.cpp`): keypad items now use `&lv_font_montserrat_28`, which bundles those FontAwesome glyphs - both action keys render as real icons, digits stay legible.
+- **PIN pad backspace/OK keys were empty "tofu" squares.** Root cause: the keypad matrix used `font_argus_label_28`, an Orbitron subset carrying only digits/colon/space/AMP, so `LV_SYMBOL_BACKSPACE`/`LV_SYMBOL_OK` had no glyphs. Fix (`pin_pad_screen.cpp`): keypad items now use `&lv_font_montserrat_28`, which bundles those FontAwesome glyphs - both action keys render as real icons, digits stay legible.
 
 ---
 

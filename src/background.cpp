@@ -6,7 +6,7 @@
 #include <esp_heap_caps.h>
 
 // Mode-aware wallpaper - each mode gets its own vibe:
-//   Daily   -> /backgrounds/daily.rgb565    (DarkHorse logo)
+//   Daily   -> /backgrounds/daily.rgb565    (ARGUS logo)
 //   Defense -> /backgrounds/defense.rgb565  (Privacy is an Illusion)
 //   Offense -> /backgrounds/offense.rgb565  (skull, red-team)
 //

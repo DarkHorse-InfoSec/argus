@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Host unit tests for DarkHorse ARGUS — no cmake, no make required.
+# Host unit tests for ARGUS — no cmake, no make required.
 #   bash test/run.sh
 #
 # Compiles the pure modules under src/mesh/ together with the self-registering

@@ -109,7 +109,7 @@ static uint32_t      s_pos_request_dest    = 0;
 static MeshOutgoing  s_outgoing[MESH_MAX_OUTGOING];
 static int           s_outgoing_count = 0;
 static const uint32_t kAckTimeoutMs   = 30000;
-static char          s_long_name[MESH_MAX_LONG_NAME]   = "DarkHorse ARGUS";
+static char          s_long_name[MESH_MAX_LONG_NAME]   = "ARGUS";
 static char          s_short_name[MESH_MAX_SHORT_NAME]  = "ARGS";
 
 // --- Rebroadcast (relay) queue ---

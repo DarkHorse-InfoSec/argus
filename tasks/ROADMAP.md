@@ -116,7 +116,7 @@ NOTE: NO jammers (illegal). Keep offensive tools behind the persona + an authori
       ARGUS_BLE_THREAT_PIPELINE=1 permanently; turn ARGUS_BLE_DETECT_DEBUG=0 after a real
       tracker-follow test confirms escalation. (main.cpp:80, ble_detect_pipeline.cpp)
 - [x] Font licensing: removed every Bank Gothic raster from the firmware. Regenerated
-      font_dh_ui/argus/wordmark from OFL Saira Condensed SemiBold and the five digital-clock
+      font_argus_ui/argus/wordmark from OFL Saira Condensed SemiBold and the five digital-clock
       subsets from OFL Montserrat Medium. Added exact OFL notices and README credits for
       Saira Condensed, Montserrat, Orbitron, and VT323. Built, flashed, and visually approved
       on hardware on 2026-07-25. No commercial fonts remain in src/ or tools/.

@@ -27,7 +27,7 @@
 #define DISP_CMD_BRIGHTNESS   (0x51)
 
 
-#define SEND_BUF_SIZE        (4096)   // DarkHorse: 32KB->8KB DMA chunks; 16KB stock fails ESP_ERR_NO_MEM under WiFi-promisc + BLE scan. Was (16384).
+#define SEND_BUF_SIZE        (4096)   // ARGUS: 32KB->8KB DMA chunks; 16KB stock fails ESP_ERR_NO_MEM under WiFi-promisc + BLE scan. Was (16384).
 
 
 #ifdef ARDUINO_T_LORA_PAGER

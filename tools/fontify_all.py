@@ -16,13 +16,13 @@ for f in glob.glob('src/*.cpp'):
             var=m.group(2)
             if var in symvars: symskip.add(f"{os.path.basename(f)}:{var}"); return m.group(0)
             if var in kbvars:  return m.group(0)
-            return m.group(1)+f'font_dh_label_{sz}'
+            return m.group(1)+f'font_argus_label_{sz}'
         return pat,repl
     n_file=0
     for sz in SIZES:
         pat,repl=mk(sz); s,n=pat.subn(repl,s); n_file+=n
     # count real replacements (subn counts include no-op returns)
-    real=len(re.findall(r'&font_dh_label_(?:14|16|28)\b',s))-len(re.findall(r'&font_dh_label_(?:14|16|28)\b',orig))
+    real=len(re.findall(r'&font_argus_label_(?:14|16|28)\b',s))-len(re.findall(r'&font_argus_label_(?:14|16|28)\b',orig))
     if real>0:
         if '#include "theme.h"' not in s:
             hb=os.path.basename(f).replace('.cpp','.h')

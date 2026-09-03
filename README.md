@@ -2,7 +2,7 @@
 
 <p align="center"><img src="img/argus/clock.png" width="230" alt="ARGUS watch face"></p>
 
-**ARGUS** is [DarkHorse InfoSec](https://darkhorseinfosec.com)'s security firmware for the LILYGO T-Watch Ultra: an ESP32-S3 smartwatch (AMOLED display, LoRa, GNSS, NFC, full sensor suite) turned into an anti-surveillance field tool and daily-wear companion. It is a full smartwatch (clock, alarms, calendar, phone notifications, Meshtastic comms) plus a suite of RF/wireless detection and analysis tools, with the defensive, anti-stalking features front and centre.
+**ARGUS** is the ARGUS Project's security firmware for the LILYGO T-Watch Ultra: an ESP32-S3 smartwatch (AMOLED display, LoRa, GNSS, NFC, full sensor suite) turned into an anti-surveillance field tool and daily-wear companion. It is a full smartwatch (clock, alarms, calendar, phone notifications, Meshtastic comms) plus a suite of RF/wireless detection and analysis tools, with the defensive, anti-stalking features front and centre.
 
 > **ARGUS is a fork of the phenomenal [`13:37` firmware by r3dfish](https://github.com/r3dfish/13-37).** That project is the foundation this is built on, the entire smartwatch core, the Meshtastic client, and most of the RF toolkit are r3dfish's excellent work. ARGUS rebrands it and adds an anti-surveillance / daily-wear layer on top. Full credit and huge thanks to r3dfish, please go star the original: **<https://github.com/r3dfish/13-37>**. See [Credits](#credits--acknowledgments).
 
@@ -470,7 +470,7 @@ pio device monitor          # 115200 baud
 
 That's it — no manual library edits. LilyGoLib and its NFC forks are **vendored under `lib/`** with the required patches baked in (SEND_BUF_SIZE and LV_USE_SNAPSHOT), so there is no build-time patch step, and all dependencies are pinned for reproducible output. The build emits `bootloader.bin`, `partitions.bin`, and `firmware.bin` under `.pio/build/twatch_ultra/`.
 
-> **Note:** ARGUS is DarkHorse InfoSec's fork of the open-source T-Watch Ultra firmware. The `r3dfish/13-37` links in this section point to the **upstream base project**; there are no ARGUS-specific prebuilt binaries or web-flasher yet, so build ARGUS from source (above). The two extra PlatformIO envs (`ancs_spike`, `screenshots`) are development-only.
+> **Note:** ARGUS is ARGUS Project's fork of the open-source T-Watch Ultra firmware. The `r3dfish/13-37` links in this section point to the **upstream base project**; there are no ARGUS-specific prebuilt binaries or web-flasher yet, so build ARGUS from source (above). The two extra PlatformIO envs (`ancs_spike`, `screenshots`) are development-only.
 
 If the board isn't auto-detected, pass the port: `pio run -t upload --upload-port /dev/ttyACM0` (Linux) / `COMx` (Windows) / `/dev/cu.usbmodemXXXX` (macOS).
 

@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// ── DarkHorse HexHound — watch-native cyber-recon pet engine ────────────────
+// ── ARGUS HexHound — watch-native cyber-recon pet engine ────────────────
 //
-// A watch-native reimagining of the DarkHorse HexHound (Labs/HexHound), the
+// A watch-native reimagining of the ARGUS HexHound (Labs/HexHound), the
 // USB-dongle recon pet, ported to the ARGUS watch (ESP32-S3, 502x410 AMOLED,
 // LVGL 9.5). This module is the *game engine only* — pure state, no LVGL. The
 // rendering lives in pet_screen.cpp, which keeps the pet_screen_*() API so the
@@ -18,7 +18,7 @@
 //   2 Packet Pup       WiFi recon           (hatches on first real recon event)
 //   3 Beacon Beast     BLE / beacon sense   (200 XP)
 //   4 Gremlin Mode     mischief / capture   (500 XP)
-//   5 DarkHorse Sentinel  full-spectrum     (1000 XP)
+//   5 Sentinel  full-spectrum     (1000 XP)
 //
 // XP only comes from real signals, so the XP thresholds ARE real-milestone
 // gates. It is fed by:
@@ -33,7 +33,7 @@ enum HexStage : uint8_t {
     HEX_PUP,        // Packet Pup
     HEX_BEAST,      // Beacon Beast
     HEX_GREMLIN,    // Gremlin Mode
-    HEX_SENTINEL    // DarkHorse Sentinel
+    HEX_SENTINEL    // Sentinel
 };
 
 enum HexMood : uint8_t {

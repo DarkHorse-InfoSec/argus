@@ -88,7 +88,7 @@ static lv_obj_t *make_row(lv_obj_t *list, const char *city, int off, bool highli
     lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *name = lv_label_create(row);
-    lv_obj_set_style_text_font(name, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(name, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(name, highlight ? lv_color_black() : ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(name, city);
     lv_obj_align(name, LV_ALIGN_LEFT_MID, 14, 0);
@@ -96,13 +96,13 @@ static lv_obj_t *make_row(lv_obj_t *list, const char *city, int off, bool highli
     char ob[12];
     snprintf(ob, sizeof(ob), "UTC%+d", off);
     lv_obj_t *offl = lv_label_create(row);
-    lv_obj_set_style_text_font(offl, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(offl, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_color(offl, highlight ? lv_color_black() : ARGUS_TEXT_DIM, LV_PART_MAIN);
     lv_label_set_text(offl, ob);
     lv_obj_align(offl, LV_ALIGN_CENTER, 34, 0);
 
     lv_obj_t *tm = lv_label_create(row);
-    lv_obj_set_style_text_font(tm, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(tm, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(tm, highlight ? lv_color_black() : ARGUS_ACCENT, LV_PART_MAIN);
     lv_label_set_text(tm, "--:--");
     lv_obj_align(tm, LV_ALIGN_RIGHT_MID, -16, 0);
@@ -117,7 +117,7 @@ void world_clock_screen_create()
 
     lv_obj_t *title = lv_label_create(world_clock_screen);
     lv_obj_set_style_text_color(title, argus_base_accent(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(title, &font_dh_ui, LV_PART_MAIN);
+    lv_obj_set_style_text_font(title, &font_argus_ui, LV_PART_MAIN);
     lv_label_set_text(title, "WORLD CLOCK");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 8);
 

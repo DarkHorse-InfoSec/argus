@@ -1,15 +1,15 @@
 #pragma once
-// DarkHorse ARGUS theme.
+// ARGUS theme.
 //
 // The 13-37 base hardcoded its matrix-green accent as lv_color_make(0x00,0xCC,0x66)
 // (and a brighter "active" lv_color_make(0x00,0xFF,0x80)) at ~67 sites across the
-// screens. This header centralizes the DarkHorse brand palette so the accent lives
+// screens. This header centralizes the ARGUS brand palette so the accent lives
 // in one place: calm steel-blue at rest, HADES threat-red for the alert state
 // (brand-as-functional-state). Colors are lv_color_make(r,g,b); LVGL converts to
 // the panel's native format.
 #include <lvgl.h>
 
-// Brand accent, at rest (calm) — DarkHorse steel-blue (#9BBCD6).
+// Brand accent, at rest (calm) — ARGUS steel-blue (#9BBCD6).
 // Drop-in replacement for the old matrix-green lv_color_make(0x00,0xCC,0x66).
 #define ARGUS_ACCENT         lv_color_make(0x9B, 0xBC, 0xD6)
 
@@ -103,16 +103,16 @@ void argus_keyboard_fit(lv_obj_t *kb, int height);
 // pipeline drives it. Defined in theme.cpp.
 void argus_set_threat(bool active);
 
-// Full-alphabet Saira Condensed brand font for screen titles (src/font_dh_ui.c).
-LV_FONT_DECLARE(font_dh_ui);
+// Full-alphabet Saira Condensed brand font for screen titles (src/font_argus_ui.c).
+LV_FONT_DECLARE(font_argus_ui);
 
-// DarkHorse UI text fonts (brand system): Orbitron for labels, VT323 for numeric/
+// ARGUS UI text fonts (brand system): Orbitron for labels, VT323 for numeric/
 // terminal readouts, Saira Condensed for the wordmark/titles, and Montserrat for
 // the digital clock. All are generated from OFL-licensed font sources.
-LV_FONT_DECLARE(font_dh_label_14);   // Orbitron 14 - small labels
-LV_FONT_DECLARE(font_dh_label_16);   // Orbitron 16 - body labels
-LV_FONT_DECLARE(font_dh_label_20);   // Orbitron 20 - tile labels, date
-LV_FONT_DECLARE(font_dh_label_28);   // Orbitron 28 - larger labels
-LV_FONT_DECLARE(font_dh_mono_16);    // VT323 16 - small numeric readouts
-LV_FONT_DECLARE(font_dh_mono_48);    // VT323 48 subset (digits/colon) - big readouts (alarm/stopwatch/timer)
-LV_FONT_DECLARE(font_dh_label_48);   // Orbitron 48 subset (START/STOP) - wardriver button
+LV_FONT_DECLARE(font_argus_label_14);   // Orbitron 14 - small labels
+LV_FONT_DECLARE(font_argus_label_16);   // Orbitron 16 - body labels
+LV_FONT_DECLARE(font_argus_label_20);   // Orbitron 20 - tile labels, date
+LV_FONT_DECLARE(font_argus_label_28);   // Orbitron 28 - larger labels
+LV_FONT_DECLARE(font_argus_mono_16);    // VT323 16 - small numeric readouts
+LV_FONT_DECLARE(font_argus_mono_48);    // VT323 48 subset (digits/colon) - big readouts (alarm/stopwatch/timer)
+LV_FONT_DECLARE(font_argus_label_48);   // Orbitron 48 subset (START/STOP) - wardriver button

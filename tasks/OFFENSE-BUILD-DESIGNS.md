@@ -65,9 +65,9 @@ Four design agents produced implementation-ready designs. This is the consolidat
 actionable record + the recommended BUILD ORDER. Full loot draft code is saved in
 tasks/drafts/. Nothing here is built yet except the skull2 wallpaper.
 
-Key convention reminder: no em dashes, no Unicode, no Bank Gothic font (font_dh_ui)
-in Offense (commercial/unlicensed for public release - use Orbitron font_dh_label_*
-and VT323 font_dh_mono_* instead).
+Key convention reminder: no em dashes, no Unicode, no Bank Gothic font (font_argus_ui)
+in Offense (commercial/unlicensed for public release - use Orbitron font_argus_label_*
+and VT323 font_argus_mono_* instead).
 
 ---
 
@@ -160,7 +160,7 @@ numeric readouts always; warm near-black tile faces (top 0x22,0x18,0x0C -> botto
 0x12,0x0A,0x04). State machine: amber = holstered; red = firing; pulsing red vs solid
 red distinguishes "firing" from "counter-detected".
 
-**Fonts:** Orbitron (font_dh_label_*) for headers/labels; VT323 mono (font_dh_mono_16/48,
+**Fonts:** Orbitron (font_argus_label_*) for headers/labels; VT323 mono (font_argus_mono_16/48,
 green) for ALL live readouts/counters/status log (ARMED, CAPTURING, TX: DEAUTH, LOOT 4.2MB).
 Never Bank Gothic.
 

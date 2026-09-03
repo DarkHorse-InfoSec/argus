@@ -69,7 +69,7 @@ Red-teamer questions this raises:
    engagement. A red-teamer probably wants USB SD reachable in Offense even
    though it's "neutral." Same for a future dedicated "Loot" screen.
 3. **New offensive capability to plan for** (all subject to authorization +
-   legality; this is the DarkHorse pentest context): deauth/evil-twin ATTACK
+   legality; this is the ARGUS pentest context): deauth/evil-twin ATTACK
    (vs the current detector), beacon/BLE spam, captive-portal, a live target
    list. Which are in scope for the build-out?
 4. **Where do the neutral utilities live** once Defense is "defensive only"?
@@ -129,7 +129,7 @@ Domenic's calls + my recommendations. Build is gated on the knock working first.
    showing only these, so each mode's grid is coherent (Daily = utilities,
    Defense = detectors, Offense = offensive). USB SD ALSO appears in Offense
    (loot). No toggle needed - they aren't sensitive.
-5. **New tools to add** (propose; authorized-use / DarkHorse pentest context):
+5. **New tools to add** (propose; authorized-use / ARGUS pentest context):
    Offense - Evil-Twin ATTACK + deauth, beacon/SSID flood, BLE spam
    (Sour-Apple-style), a Loot/Exfil manager (list /pwn + /Wardrive, sizes,
    offload via USB SD, wipe), Wardriver as a first-class Offense tile.

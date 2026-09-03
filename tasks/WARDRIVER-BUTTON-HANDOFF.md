@@ -6,7 +6,7 @@ Build:  pio run -e twatch_ultra   (from the repo root; the pio CLI may not be on
 Flash:  ...pio.exe run -d ... -e twatch_ultra -t upload --upload-port COM19
 COM ports: DOWNLOAD mode = 303A:1001 = COM19 (only this flashes; BOOT+RESET to enter). App CDC = 303A:8227 = COM20.
           Serial monitor must open with DTR=False/RTS=False (see tasks/FLASHING-NOTES.md) or the S3 drops to download mode.
-GIT: argus-watch IS a git repo, branch darkhorse-argus. Baseline HEAD includes the coexistence fix (commit d10ab7b).
+GIT: argus-watch IS a git repo, branch argus-argus. Baseline HEAD includes the coexistence fix (commit d10ab7b).
      There is UNCOMMITTED WIP in the tree (see below) - preserve it; do not commit or push unless explicitly asked.
      No Co-Authored-By trailers, no em dashes.
 

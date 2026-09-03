@@ -400,7 +400,7 @@ static lv_obj_t *make_time_roller(const char *header, const char *opts,
 {
     lv_obj_t *hl = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(hl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(hl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(hl, &font_argus_label_16, LV_PART_MAIN);
     lv_label_set_text(hl, header);
     lv_obj_align(hl, LV_ALIGN_TOP_MID, x_off, y);
     register_shiftable_xy(hl, x_off, y);
@@ -412,7 +412,7 @@ static lv_obj_t *make_time_roller(const char *header, const char *opts,
     lv_obj_set_width(r, w);
     lv_obj_set_style_bg_color(r, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
     lv_obj_set_style_text_color(r, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(r, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(r, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_border_color(r, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
     lv_obj_set_style_border_width(r, 1, LV_PART_MAIN);
     lv_obj_set_style_bg_color(r, lv_color_make(0x00, 0x55, 0x33), LV_PART_SELECTED);
@@ -533,13 +533,13 @@ static lv_obj_t *make_boot_row(const char *label, int y, bool checked,
 
     lv_obj_t *lbl = lv_label_create(row);
     lv_obj_set_style_text_color(lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(lbl, label);
     lv_obj_align(lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     lv_obj_t *val = lv_label_create(row);
     lv_obj_set_style_text_color(val, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(val, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(val, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(val, checked ? "On" : "Off");
     lv_obj_align(val, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -587,7 +587,7 @@ void settings_screen_create()
     lv_obj_t *title = lv_label_create(settings_screen);
     s_settings_title = title;   // repainted per mode in settings_screen_show()
     lv_obj_set_style_text_color(title, argus_base_accent(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(title, &font_dh_ui, LV_PART_MAIN);
+    lv_obj_set_style_text_font(title, &font_argus_ui, LV_PART_MAIN);
     lv_label_set_text(title, "SETTINGS");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 5);
 
@@ -602,13 +602,13 @@ void settings_screen_create()
 
     lv_obj_t *lbl = lv_label_create(row);
     lv_obj_set_style_text_color(lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(lbl, "Brightness");
     lv_obj_align(lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     brightness_val_label = lv_label_create(row);
     lv_obj_set_style_text_color(brightness_val_label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(brightness_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(brightness_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(brightness_val_label, "100%");
     lv_obj_align(brightness_val_label, LV_ALIGN_RIGHT_MID, 0, 0);
 
@@ -657,13 +657,13 @@ void settings_screen_create()
 
     lv_obj_t *face_lbl = lv_label_create(face_row);
     lv_obj_set_style_text_color(face_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(face_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(face_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(face_lbl, "Watch Face");
     lv_obj_align(face_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     face_val_label = lv_label_create(face_row);
     lv_obj_set_style_text_color(face_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(face_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(face_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(face_val_label, "Digital");
     lv_obj_align(face_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -685,13 +685,13 @@ void settings_screen_create()
 
     lv_obj_t *hf_lbl = lv_label_create(hour_format_row);
     lv_obj_set_style_text_color(hf_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(hf_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(hf_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(hf_lbl, "Time Format");
     lv_obj_align(hf_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     hour_format_val_label = lv_label_create(hour_format_row);
     lv_obj_set_style_text_color(hour_format_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(hour_format_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(hour_format_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(hour_format_val_label, "12h");
     lv_obj_align(hour_format_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -714,7 +714,7 @@ void settings_screen_create()
 
     lv_obj_t *ampm_lbl = lv_label_create(ampm_row);
     lv_obj_set_style_text_color(ampm_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(ampm_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(ampm_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(ampm_lbl, "Display AM/PM");
     lv_obj_align(ampm_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -737,7 +737,7 @@ void settings_screen_create()
 
     lv_obj_t *secs_lbl = lv_label_create(secs_row);
     lv_obj_set_style_text_color(secs_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(secs_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(secs_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(secs_lbl, "Display Seconds");
     lv_obj_align(secs_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -761,13 +761,13 @@ void settings_screen_create()
 
     lv_obj_t *mx_lbl = lv_label_create(matrix_row);
     lv_obj_set_style_text_color(mx_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(mx_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mx_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(mx_lbl, "Matrix BG");
     lv_obj_align(mx_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     matrix_val_label = lv_label_create(matrix_row);
     lv_obj_set_style_text_color(matrix_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(matrix_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(matrix_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(matrix_val_label, "Off");
     lv_obj_align(matrix_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -790,7 +790,7 @@ void settings_screen_create()
 
     lv_obj_t *show_day_lbl = lv_label_create(show_day_row);
     lv_obj_set_style_text_color(show_day_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(show_day_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(show_day_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(show_day_lbl, "Show Day");
     lv_obj_align(show_day_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -814,7 +814,7 @@ void settings_screen_create()
 
     lv_obj_t *show_date_lbl = lv_label_create(show_date_row);
     lv_obj_set_style_text_color(show_date_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(show_date_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(show_date_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(show_date_lbl, "Show Date");
     lv_obj_align(show_date_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -838,7 +838,7 @@ void settings_screen_create()
 
     lv_obj_t *vibrate_lbl = lv_label_create(vibrate_row);
     lv_obj_set_style_text_color(vibrate_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(vibrate_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(vibrate_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(vibrate_lbl, "Vibrate");
     lv_obj_align(vibrate_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -872,7 +872,7 @@ void settings_screen_create()
 
     lv_obj_t *dim_lbl = lv_label_create(dim_row);
     lv_obj_set_style_text_color(dim_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(dim_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dim_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(dim_lbl, "Dim Timer");
     lv_obj_align(dim_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -880,7 +880,7 @@ void settings_screen_create()
     lv_dropdown_set_options(dim_dropdown, "OFF\n5 Seconds\n30 Seconds\n1 Minute\n5 Minutes");
     lv_dropdown_set_selected(dim_dropdown, 0);
     lv_obj_set_size(dim_dropdown, 185, 34);
-    lv_obj_set_style_text_font(dim_dropdown, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dim_dropdown, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_bg_color(dim_dropdown, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
     lv_obj_set_style_text_color(dim_dropdown, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_border_color(dim_dropdown, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
@@ -889,7 +889,7 @@ void settings_screen_create()
     lv_obj_t *dd_list = lv_dropdown_get_list(dim_dropdown);
     lv_obj_set_style_bg_color(dd_list, lv_color_make(0x22, 0x22, 0x22), LV_PART_MAIN);
     lv_obj_set_style_text_color(dd_list, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(dd_list, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dd_list, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_border_color(dd_list, lv_color_make(0x55, 0x55, 0x55), LV_PART_MAIN);
     lv_obj_add_event_cb(dim_dropdown, on_dim_timeout_changed, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_align(dim_dropdown, LV_ALIGN_RIGHT_MID, 0, 0);
@@ -906,13 +906,13 @@ void settings_screen_create()
 
     lv_obj_t *dbr_lbl = lv_label_create(dbr_row);
     lv_obj_set_style_text_color(dbr_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(dbr_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dbr_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(dbr_lbl, "Dimmed");
     lv_obj_align(dbr_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     dim_brightness_val_label = lv_label_create(dbr_row);
     lv_obj_set_style_text_color(dim_brightness_val_label, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(dim_brightness_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dim_brightness_val_label, &font_argus_label_20, LV_PART_MAIN);
     int init_pct = (int)s_dim_brightness * 100 / (int)DEVICE_MAX_BRIGHTNESS_LEVEL;
     lv_label_set_text_fmt(dim_brightness_val_label, "%d%%", init_pct);
     lv_obj_align(dim_brightness_val_label, LV_ALIGN_RIGHT_MID, 0, 0);
@@ -952,13 +952,13 @@ void settings_screen_create()
 
     lv_obj_t *motion_lbl = lv_label_create(motion_row);
     lv_obj_set_style_text_color(motion_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(motion_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(motion_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(motion_lbl, "Motion brightens screen");
     lv_obj_align(motion_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     motion_wake_val_label = lv_label_create(motion_row);
     lv_obj_set_style_text_color(motion_wake_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(motion_wake_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(motion_wake_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(motion_wake_val_label, "On");
     lv_obj_align(motion_wake_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -998,13 +998,13 @@ void settings_screen_create()
 
     lv_obj_t *manual_lbl = lv_label_create(manual_row);
     lv_obj_set_style_text_color(manual_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(manual_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(manual_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(manual_lbl, "Manual Time");
     lv_obj_align(manual_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     manual_time_val_label = lv_label_create(manual_row);
     lv_obj_set_style_text_color(manual_time_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(manual_time_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(manual_time_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(manual_time_val_label, "Off");
     lv_obj_align(manual_time_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -1019,7 +1019,7 @@ void settings_screen_create()
     // Instruction line
     lv_obj_t *manual_hint = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(manual_hint, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(manual_hint, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(manual_hint, &font_argus_label_16, LV_PART_MAIN);
     lv_label_set_text(manual_hint, "Set the date & time below, then press SET");
     lv_obj_align(manual_hint, LV_ALIGN_TOP_MID, 0, 900);
     register_shiftable(manual_hint, 900);
@@ -1064,7 +1064,7 @@ void settings_screen_create()
     lv_obj_t *set_lbl = lv_label_create(set_btn);
     lv_label_set_text(set_lbl, "SET TIME");
     lv_obj_set_style_text_color(set_lbl, lv_color_white(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(set_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(set_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_center(set_lbl);
     lv_obj_add_event_cb(set_btn, on_set_time_clicked, LV_EVENT_CLICKED, NULL);
 
@@ -1095,13 +1095,13 @@ void settings_screen_create()
 
     lv_obj_t *ss_lbl = lv_label_create(screenshot_row);
     lv_obj_set_style_text_color(ss_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(ss_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(ss_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(ss_lbl, "Screenshot long press");
     lv_obj_align(ss_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     screenshot_val_label = lv_label_create(screenshot_row);
     lv_obj_set_style_text_color(screenshot_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(screenshot_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(screenshot_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(screenshot_val_label, "Off");
     lv_obj_align(screenshot_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -1115,7 +1115,7 @@ void settings_screen_create()
     // Hint — explains the 3 s threshold + where the files land.
     screenshot_hint = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(screenshot_hint, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(screenshot_hint, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(screenshot_hint, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_align(screenshot_hint, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_obj_set_width(screenshot_hint, 360);
     lv_label_set_long_mode(screenshot_hint, LV_LABEL_LONG_WRAP);
@@ -1151,13 +1151,13 @@ void settings_screen_create()
 
     lv_obj_t *wp_lbl = lv_label_create(wallpaper_row);
     lv_obj_set_style_text_color(wp_lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(wp_lbl, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wp_lbl, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(wp_lbl, "Wallpaper");
     lv_obj_align(wp_lbl, LV_ALIGN_LEFT_MID, 0, 0);
 
     wallpaper_val_label = lv_label_create(wallpaper_row);
     lv_obj_set_style_text_color(wallpaper_val_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(wallpaper_val_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wallpaper_val_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(wallpaper_val_label, "Off");
     lv_obj_align(wallpaper_val_label, LV_ALIGN_RIGHT_MID, -80, 0);
 
@@ -1172,7 +1172,7 @@ void settings_screen_create()
     // Hint — tells the user where to drop the image on the SD card.
     lv_obj_t *wp_hint = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(wp_hint, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(wp_hint, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wp_hint, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_align(wp_hint, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_obj_set_width(wp_hint, 360);
     lv_label_set_long_mode(wp_hint, LV_LABEL_LONG_WRAP);
@@ -1210,7 +1210,7 @@ void settings_screen_create()
 
     lv_obj_t *boot_hdr = lv_label_create(boot_hdr_row);
     lv_obj_set_style_text_color(boot_hdr, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(boot_hdr, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(boot_hdr, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(boot_hdr, "Enable at boot");
     lv_obj_align(boot_hdr, LV_ALIGN_LEFT_MID, 0, 0);
 
@@ -1229,7 +1229,7 @@ void settings_screen_create()
     // Hint: clarifies the boot-time behaviour and why BT isn't listed.
     lv_obj_t *boot_hint = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(boot_hint, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(boot_hint, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(boot_hint, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_style_text_align(boot_hint, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_obj_set_width(boot_hint, 360);
     lv_label_set_long_mode(boot_hint, LV_LABEL_LONG_WRAP);
@@ -1251,14 +1251,14 @@ void settings_screen_create()
 
     lv_obj_t *sys_hdr = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(sys_hdr, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(sys_hdr, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(sys_hdr, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(sys_hdr, "System Info");
     lv_obj_align(sys_hdr, LV_ALIGN_TOP_MID, 0, 1714);
     register_shiftable(sys_hdr, 1714);
 
     sysinfo_label = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(sysinfo_label, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(sysinfo_label, &font_dh_mono_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(sysinfo_label, &font_argus_mono_16, LV_PART_MAIN);
     lv_obj_set_width(sysinfo_label, 360);
     lv_label_set_text(sysinfo_label, "");
     lv_obj_align(sysinfo_label, LV_ALIGN_TOP_MID, 0, 1750);
@@ -1278,7 +1278,7 @@ void settings_screen_create()
 
     lv_obj_t *mode_hdr = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(mode_hdr, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(mode_hdr, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mode_hdr, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(mode_hdr, "Mode");
     lv_obj_align(mode_hdr, LV_ALIGN_TOP_MID, 0, 1914);
     register_shiftable(mode_hdr, 1914);
@@ -1293,7 +1293,7 @@ void settings_screen_create()
 
     lv_obj_t *mode_hint = lv_label_create(settings_screen);
     lv_obj_set_style_text_color(mode_hint, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(mode_hint, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mode_hint, &font_argus_label_14, LV_PART_MAIN);
     lv_obj_set_width(mode_hint, 360);
     lv_label_set_text(mode_hint, "Defense shows the anti-surveillance detectors. Daily hides them for an innocent look.");
     lv_obj_align(mode_hint, LV_ALIGN_TOP_MID, 0, 2050);
@@ -1313,7 +1313,7 @@ void settings_screen_create()
     lv_obj_align(s_ofs_btn, LV_ALIGN_TOP_MID, 0, 2110);
     register_shiftable(s_ofs_btn, 2110);
     s_ofs_lbl = lv_label_create(s_ofs_btn);
-    lv_obj_set_style_text_font(s_ofs_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(s_ofs_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(s_ofs_lbl, ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(s_ofs_lbl, "Unlock Offense (test)");
     lv_obj_center(s_ofs_lbl);
@@ -1329,7 +1329,7 @@ void settings_screen_create()
     lv_obj_align(det_btn, LV_ALIGN_TOP_MID, 0, 2190);
     register_shiftable(det_btn, 2190);
     lv_obj_t *det_lbl = lv_label_create(det_btn);
-    lv_obj_set_style_text_font(det_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(det_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(det_lbl, ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(det_lbl, "Clear detection logs");
     lv_obj_center(det_lbl);
@@ -1366,7 +1366,7 @@ void settings_screen_create()
     lv_obj_align(usbsd_btn, LV_ALIGN_TOP_MID, 0, 2270);
     register_shiftable(usbsd_btn, 2270);
     lv_obj_t *usbsd_lbl = lv_label_create(usbsd_btn);
-    lv_obj_set_style_text_font(usbsd_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(usbsd_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(usbsd_lbl, ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(usbsd_lbl, "USB SD card reader");
     lv_obj_center(usbsd_lbl);

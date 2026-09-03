@@ -2,7 +2,7 @@
 #include "threat_radar.h"
 #include "argus_mode.h"
 
-// Runtime, state-aware brand accent (DarkHorse -> HADES).
+// Runtime, state-aware brand accent (ARGUS -> HADES).
 //
 // The compile-time ARGUS_ACCENT macro paints the calm steel-blue resting brand
 // at ~67 low-traffic sites. This function is its live, threat-aware sibling:
@@ -89,7 +89,7 @@ void argus_mode_indicator_init(void)
     // lv_obj_add_flag(s_mode_chip, LV_OBJ_FLAG_HIDDEN);
     //
     // s_mode_chip_lbl = lv_label_create(s_mode_chip);
-    // lv_obj_set_style_text_font(s_mode_chip_lbl, &font_dh_label_14, LV_PART_MAIN);
+    // lv_obj_set_style_text_font(s_mode_chip_lbl, &font_argus_label_14, LV_PART_MAIN);
     // lv_obj_set_style_text_color(s_mode_chip_lbl, lv_color_black(), LV_PART_MAIN);
     // lv_label_set_text(s_mode_chip_lbl, "DEF");
     // lv_obj_center(s_mode_chip_lbl);

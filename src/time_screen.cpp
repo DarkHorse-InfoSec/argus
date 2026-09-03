@@ -63,14 +63,14 @@ static lv_obj_t *make_tile(lv_obj_t *parent, const char *label_text)
 
     lv_obj_t *lbl = lv_label_create(tile);
     lv_obj_set_style_text_color(lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl, &font_dh_label_14, LV_PART_MAIN);   // Orbitron (fits 118px tile)
+    lv_obj_set_style_text_font(lbl, &font_argus_label_14, LV_PART_MAIN);   // Orbitron (fits 118px tile)
     lv_label_set_text(lbl, label_text);
     lv_obj_align(lbl, LV_ALIGN_BOTTOM_MID, 0, -6);
 
     return tile;
 }
 
-// Load the DarkHorse HD sprite /Icons/<name>.png if present on the SD card,
+// Load the ARGUS HD sprite /Icons/<name>.png if present on the SD card,
 // else fall back to the procedural draw_*_icon(). Same pattern as tools_screen.
 static void tile_icon(lv_obj_t *tile, const char *name, void (*fallback)(lv_obj_t *))
 {
@@ -767,7 +767,7 @@ void time_screen_create()
     lv_obj_t *title = lv_label_create(time_screen);
     s_time_title = title;
     lv_obj_set_style_text_color(title, argus_base_accent(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(title, &font_dh_ui, LV_PART_MAIN);
+    lv_obj_set_style_text_font(title, &font_argus_ui, LV_PART_MAIN);
     lv_label_set_text(title, "TIME");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 8);
 

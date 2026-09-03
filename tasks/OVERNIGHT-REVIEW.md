@@ -1,6 +1,6 @@
-# DarkHorse ARGUS — Overnight Session Review
+# ARGUS — Overnight Session Review
 
-Branch `darkhorse-argus`, LOCAL only. Final firmware (theming build) is flashed.
+Branch `argus-argus`, LOCAL only. Final firmware (theming build) is flashed.
 Final commit: `3b5778e`. Last USER-CONFIRMED-GOOD build: `a0eb15e` (the merge).
 
 ## >>> FIRST THING IN THE MORNING <<<
@@ -8,30 +8,30 @@ Final commit: `3b5778e`. Last USER-CONFIRMED-GOOD build: `a0eb15e` (the merge).
 in its ROM state (enumerates as 303A:1001) until a physical power-cycle; the running
 app enumerates as 303A:8227. This is normal — it was true after every flash this
 session (you power-cycled each time without noticing). So: press the crown, and it
-should boot the DarkHorse splash → themed clock.
+should boot the ARGUS splash → themed clock.
 
 If it boots and looks right → great, we're done for this batch.
 If it's blank / boot-loops / looks broken → hold BOOT + click RST (download mode) and
 tell me; I'll reflash the last-confirmed-good build `a0eb15e` in seconds.
 
 ## What ARGUS is now
-DarkHorse-branded fork of r3dfish/13-37 (full watch + all RF tools + Meshtastic +
+ARGUS-branded fork of r3dfish/13-37 (full watch + all RF tools + Meshtastic +
 wardriver + detectors) PLUS: ARGUS name, Bank Gothic boot splash + titles, steel-blue
-#9BBCD6 theme with DarkHorse→HADES threat flip, HexHound recon pet (5 stages,
+#9BBCD6 theme with ARGUS→HADES threat flip, HexHound recon pet (5 stages,
 replaced the pwnpet goldfish), Threat Radar anti-stalking, passive handshake capture,
 and a host unit-test harness (mesh crypto vs FIPS/NIST, `bash test/run.sh` = 20/20).
 
 ## Done + committed this session (builds clean, Flash ~85.4%)
 1. **Full theming pass**: 27 screen titles → steel-blue + new full-alphabet Bank Gothic
-   UI font (`src/font_dh_ui.c`). Semantic colors (battery, running-green, threat-red,
+   UI font (`src/font_argus_ui.c`). Semantic colors (battery, running-green, threat-red,
    error-red, Meshtastic purple) intact. This is the flashed build.
 2. Host tests still 20/20.
 
 ## VERIFY once booted (I could not see the display overnight)
-- [ ] Boots cleanly to DARKHORSE/ARGUS splash → clock.
+- [ ] Boots cleanly to ARGUS/ARGUS splash → clock.
 - [ ] **Titles**: Bank Gothic steel-blue, legible, NOT clipped. Check the longest:
       CONFIGURATION, SEND MESSAGE, THREAT RADAR, MESHTASTIC. If any clips on the right,
-      tell me — I drop `font_dh_ui` from 32px to ~26px (one-line regen).
+      tell me — I drop `font_argus_ui` from 32px to ~26px (one-line regen).
 - [ ] HexHound / Radar / Pwn tiles still open + work.
 
 ## Reverted / deferred (NOT in the flashed build)
@@ -50,7 +50,7 @@ and a host unit-test harness (mesh crypto vs FIPS/NIST, `bash test/run.sh` = 20/
   (FCC line). `stealth` module: not ported.
 
 ## Honest summary
-Delivered safely: the full DarkHorse/HADES **color + Bank Gothic title theming** (your
+Delivered safely: the full ARGUS/HADES **color + Bank Gothic title theming** (your
 main ask), all committed and flashed. The **time fix I attempted broke the boot, so I
 reverted it** rather than leave a bricked-feeling watch — it needs a supervised re-do.
 Mesh-crypto wiring stayed deferred for safety. Nothing destructive; the last known-good

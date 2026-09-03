@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>               // floor() for coarse GPS-cell quantisation
 
-// ── DarkHorse HexHound — engine implementation ─────────────────────────────
+// ── ARGUS HexHound — engine implementation ─────────────────────────────
 //
 // Pure game logic. No LVGL. The renderer (pet_screen.cpp) reads state through
 // the accessors. Real recon feeds are polled from handshake.* and
@@ -22,7 +22,7 @@ namespace {
 // from real recon, so these are effectively real-milestone gates.
 constexpr long XP_BEAST    = 200;   // Packet Pup  -> Beacon Beast
 constexpr long XP_GREMLIN  = 500;   // Beacon Beast -> Gremlin Mode
-constexpr long XP_SENTINEL = 1000;  // Gremlin Mode -> DarkHorse Sentinel
+constexpr long XP_SENTINEL = 1000;  // Gremlin Mode -> Sentinel
 
 // Feed / reward tuning.
 constexpr long XP_PER_PWND  = 30;   // per eaten handshake

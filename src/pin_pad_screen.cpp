@@ -131,19 +131,19 @@ void pin_pad_screen_create()
 
     title_label = lv_label_create(pin_pad_screen);
     lv_obj_set_style_text_color(title_label, ARGUS_OFFENSE_ACCENT, LV_PART_MAIN);  // Offense unlock: red-team
-    lv_obj_set_style_text_font(title_label, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(title_label, &font_argus_label_20, LV_PART_MAIN);
     lv_label_set_text(title_label, "ENTER PIN");
     lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 14);
 
     dots_label = lv_label_create(pin_pad_screen);
     lv_obj_set_style_text_color(dots_label, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(dots_label, &font_dh_label_28, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dots_label, &font_argus_label_28, LV_PART_MAIN);
     lv_label_set_text(dots_label, "");
     lv_obj_align(dots_label, LV_ALIGN_TOP_MID, 0, 48);
 
     msg_label = lv_label_create(pin_pad_screen);
     lv_obj_set_style_text_color(msg_label, ARGUS_TEXT_DIM, LV_PART_MAIN);
-    lv_obj_set_style_text_font(msg_label, &font_dh_label_14, LV_PART_MAIN);
+    lv_obj_set_style_text_font(msg_label, &font_argus_label_14, LV_PART_MAIN);
     lv_label_set_text(msg_label, "");
     lv_obj_align(msg_label, LV_ALIGN_TOP_MID, 0, 84);
 
@@ -155,7 +155,7 @@ void pin_pad_screen_create()
     lv_obj_set_style_border_width(keys, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(keys, 4, LV_PART_MAIN);
     lv_obj_set_style_pad_gap(keys, 6, LV_PART_MAIN);
-    // Montserrat (not the Orbitron brand subset font_dh_label_28) for the keys:
+    // Montserrat (not the Orbitron brand subset font_argus_label_28) for the keys:
     // the brand font carries only digits/colon/space/AMP, so the LV_SYMBOL_BACKSPACE
     // and LV_SYMBOL_OK action keys rendered as empty "tofu" squares. The built-in
     // Montserrat font bundles those FontAwesome glyphs, so both action keys show as

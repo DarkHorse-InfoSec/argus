@@ -1,4 +1,4 @@
-"""DarkHorse ARGUS — custom watchface MOCKUP (design sign-off only, not firmware).
+"""ARGUS — custom watchface MOCKUP (design sign-off only, not firmware).
 
 Renders the proposed watchface at the T-Watch Ultra's 410x502 in both brand states
 so we can lock the layout before touching src/time_screen.cpp:

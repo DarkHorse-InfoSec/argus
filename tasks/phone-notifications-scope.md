@@ -65,12 +65,12 @@ user explicitly grants) and forward them over BLE.
 **Locked choice: ride Gadgetbridge (Decision B).** Gadgetbridge (open-source,
 F-Droid) already does notification-forwarding for many watches. The watch implements
 a device protocol Gadgetbridge supports; users install Gadgetbridge instead of any
-DarkHorse app.
+ARGUS app.
 - Cost: reverse/implement a supported protocol on the watch (~2-3 weeks watch-side),
   constrained to what that protocol expresses, but **zero app for us to maintain**.
 - Aligns with the project's open-source / privacy posture.
 
-(Rejected alternative, for the record: build our own DarkHorse companion app. Full
+(Rejected alternative, for the record: build our own ARGUS companion app. Full
 control and branding, but a whole Android sub-project plus ongoing OS/permission/store
 maintenance. Not worth it for v1.)
 
@@ -119,7 +119,7 @@ Build these once, both paths use them:
   toggle, so it becomes a first-class Phase 1 concept (a single mode owner that
   arbitrates the radio and gates tool reachability), not a bolt-on. The existing
   radio-conflict dialog is the fallback for anything that tries to cross modes.
-- **Decision B, Android delivery: RIDE GADGETBRIDGE.** No DarkHorse app to build or
+- **Decision B, Android delivery: RIDE GADGETBRIDGE.** No ARGUS app to build or
   maintain. Watch implements a Gadgetbridge-supported device protocol; users install
   Gadgetbridge from F-Droid.
 - **Decision C, sequencing: iPHONE (ANCS) FIRST, ANDROID AFTER.** Ship ANCS as soon

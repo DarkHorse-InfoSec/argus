@@ -1,11 +1,11 @@
-"""DarkHorse ARGUS — HD tool-icon sprite generator.
+"""ARGUS — HD tool-icon sprite generator.
 
 Mirrors gen_hexhound_sprites.py: draw at 4x supersample with shading + neon rim,
 downscale, output transparent PNGs the watch loads from SD (/Icons/<tool>.png) via
 lv_image_set_src("A:/Icons/<tool>.png"), with the procedural draw_*_icon() kept as a
 fallback when the file is absent. ZERO flash cost (flash already at 88.2%).
 
-DarkHorse icon language: dark rounded-tile ground, top rim-light, thin outer neon
+ARGUS icon language: dark rounded-tile ground, top rim-light, thin outer neon
 bloom, semantic accent (steel-blue = passive/recon, HADES-red = threat/detect,
 amber = TX/offensive). A few icons intentionally break the palette to look like the
 real object (AirTag white puck, pager yellow gadget, Tesla amber).
@@ -14,14 +14,14 @@ Per-icon spec (user direction 2026-07-20):
   wifi/analyzer/radar/aprs  approved as-is
   pager     yellow "pineapple" gadget like 13-37's
   tpms      clever: tyre + gauge + RF
-  tesla     DarkHorse-ified Tesla "T"
+  tesla     ARGUS-ified Tesla "T"
   airtag    HD realistic white puck
   skimmer   card + mag-stripe (red) + a WiFi scan symbol
   eviltwin  two APs, one made to look EVIL (red + horns)
   flock     bird-of-prey silhouette (surveillance vendor)
   pwn       evil chess pawn: dark waisted body, red neon rim, devil horns + glowing eyes
-  mouse     DarkHorse-ified computer mouse (BT HID)
-  microsd   DarkHorse-ified SD card
+  mouse     ARGUS-ified computer mouse (BT HID)
+  microsd   ARGUS-ified SD card
   flipper   KEEP existing flipper_logo_img (not generated here)
   pet       KEEP HexHound HD sprite (not generated here)
 
@@ -68,7 +68,7 @@ DL = os.environ.get("ARGUS_ICON_SRC", "./icon-src")   # source art dir; override
 
 
 def image_glyph(path, accent, hi, target=150):
-    """DarkHorseify a provided PNG: use its alpha as the shape mask, crop, scale
+    """Customize a provided PNG: use its alpha as the shape mask, crop, scale
     to fit, and refill with a top(hi)->bottom(accent) brand gradient."""
     src = Image.open(path).convert("RGBA")
     a = src.split()[3]
@@ -334,7 +334,7 @@ def g_evilpawn(a, hi):
     return l
 
 def g_mouse(a, hi):
-    # DarkHorse-ified computer mouse (BT HID) w/ a little BT rune
+    # ARGUS-ified computer mouse (BT HID) w/ a little BT rune
     l = new_canvas(); d = ImageDraw.Draw(l); cx = CW//2
     d.rounded_rectangle([cx-sc(46), sc(48), cx+sc(46), sc(168)], radius=sc(46), fill=A((20, 28, 38)),
                         outline=A(a), width=sc(5))
@@ -348,7 +348,7 @@ def g_mouse(a, hi):
     return l
 
 def g_microsd(a, hi):
-    # DarkHorse-ified microSD card
+    # ARGUS-ified microSD card
     l = new_canvas(); d = ImageDraw.Draw(l); x0, y0, x1, y1 = sc(58), sc(40), sc(142), sc(168)
     d.polygon([(x0, y0+sc(30)), (x0+sc(30), y0), (x1, y0), (x1, y1), (x0, y1)], fill=A((24, 34, 46)),
               outline=A(a), width=sc(4))
@@ -421,7 +421,7 @@ ICONS = [
     ("radar",    g_radar,    STEEL, STEEL_HI),
     ("aprs",     g_aprs,     AMBER, AMBER_HI),
     ("tpms",     g_tpms,     STEEL, STEEL_HI),
-    # tesla + flock DarkHorseified from the user's provided art (Tesla logo -> amber,
+    # tesla + flock customized from the user's provided art (Tesla logo -> amber,
     # flock-of-birds -> HADES red). pager is intentionally NOT here: it uses 13-37's
     # procedural icon (draw_pager_icon) per user direction.
     ("tesla",    lambda a, hi: image_glyph(DL + "/Tesla.png",         a, hi, target=140), AMBER, AMBER_HI),

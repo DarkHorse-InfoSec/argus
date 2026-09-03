@@ -85,19 +85,19 @@ static void add_card(const notify::Notification *n)
 
     if (n->app[0]) {
         lv_obj_t *app = lv_label_create(card);
-        lv_obj_set_style_text_font(app, &font_dh_label_14, LV_PART_MAIN);
+        lv_obj_set_style_text_font(app, &font_argus_label_14, LV_PART_MAIN);
         lv_obj_set_style_text_color(app, argus_base_accent(), LV_PART_MAIN);
         lv_label_set_text(app, n->app);
     }
     if (n->title[0]) {
         lv_obj_t *title = lv_label_create(card);
-        lv_obj_set_style_text_font(title, &font_dh_label_16, LV_PART_MAIN);
+        lv_obj_set_style_text_font(title, &font_argus_label_16, LV_PART_MAIN);
         lv_obj_set_style_text_color(title, ARGUS_TEXT, LV_PART_MAIN);
         lv_label_set_text(title, n->title);
     }
     if (n->body[0]) {
         lv_obj_t *body = lv_label_create(card);
-        lv_obj_set_style_text_font(body, &font_dh_label_14, LV_PART_MAIN);
+        lv_obj_set_style_text_font(body, &font_argus_label_14, LV_PART_MAIN);
         lv_obj_set_style_text_color(body, ARGUS_TEXT_DIM, LV_PART_MAIN);
         lv_obj_set_width(body, LV_PCT(100));
         lv_label_set_long_mode(body, LV_LABEL_LONG_WRAP);
@@ -112,7 +112,7 @@ static void rebuild_list()
     if (n == 0) {
         lv_obj_t *ph = lv_label_create(list_box);
         lv_obj_set_style_text_color(ph, ARGUS_TEXT_DIM, LV_PART_MAIN);
-        lv_obj_set_style_text_font(ph, &font_dh_label_16, LV_PART_MAIN);
+        lv_obj_set_style_text_font(ph, &font_argus_label_16, LV_PART_MAIN);
         lv_label_set_text(ph, device_mode_is_daily_wear()
                               ? "No notifications yet"
                               : "Enable to mirror phone notifications");
@@ -188,12 +188,12 @@ void notifications_screen_create()
 
     lv_obj_t *title = lv_label_create(screen);
     lv_obj_set_style_text_color(title, argus_base_accent(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(title, &font_dh_ui, LV_PART_MAIN);
+    lv_obj_set_style_text_font(title, &font_argus_ui, LV_PART_MAIN);
     lv_label_set_text(title, "Notify");
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
 
     status_label = lv_label_create(screen);
-    lv_obj_set_style_text_font(status_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(status_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(status_label, ARGUS_TEXT_DIM, LV_PART_MAIN);
     lv_label_set_text(status_label, "Notifications off - tap Enable");
     lv_obj_align(status_label, LV_ALIGN_TOP_MID, 0, 52);
@@ -208,7 +208,7 @@ void notifications_screen_create()
     lv_obj_clear_flag(platform_btn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(platform_btn, on_platform, LV_EVENT_CLICKED, NULL);
     platform_label = lv_label_create(platform_btn);
-    lv_obj_set_style_text_font(platform_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(platform_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(platform_label, ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(platform_label, "Apple (ANCS)");
     lv_obj_center(platform_label);
@@ -222,7 +222,7 @@ void notifications_screen_create()
     lv_obj_clear_flag(toggle_btn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(toggle_btn, on_toggle, LV_EVENT_CLICKED, NULL);
     toggle_label = lv_label_create(toggle_btn);
-    lv_obj_set_style_text_font(toggle_label, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(toggle_label, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(toggle_label, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(toggle_label, "ENABLE NOTIFICATIONS");
     lv_obj_center(toggle_label);
@@ -251,7 +251,7 @@ void notifications_screen_create()
     lv_obj_clear_flag(clear_btn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(clear_btn, on_clear, LV_EVENT_CLICKED, NULL);
     lv_obj_t *clear_lbl = lv_label_create(clear_btn);
-    lv_obj_set_style_text_font(clear_lbl, &font_dh_label_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(clear_lbl, &font_argus_label_16, LV_PART_MAIN);
     lv_obj_set_style_text_color(clear_lbl, ARGUS_TEXT, LV_PART_MAIN);
     lv_label_set_text(clear_lbl, "CLEAR");
     lv_obj_center(clear_lbl);

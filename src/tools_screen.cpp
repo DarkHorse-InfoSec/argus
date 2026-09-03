@@ -262,7 +262,7 @@ static lv_obj_t *make_tile(lv_obj_t *parent, const char *label_text)
 {
     lv_obj_t *tile = lv_obj_create(parent);
     lv_obj_set_size(tile, 118, 118);   // 3-across grid (was 180 for 2-across)
-    // DarkHorse tile face: dark vertical gradient + steel-blue rounded rim, so the
+    // ARGUS tile face: dark vertical gradient + steel-blue rounded rim, so the
     // premium look lives here (one place, every tile) and the HD glyph sprites stay
     // transparent (glyph + neon glow only). Matches tools/gen_icon_sprites.py.
     lv_obj_set_style_bg_color(tile, lv_color_make(0x16, 0x1E, 0x28), LV_PART_MAIN);
@@ -278,7 +278,7 @@ static lv_obj_t *make_tile(lv_obj_t *parent, const char *label_text)
 
     lv_obj_t *lbl = lv_label_create(tile);
     lv_obj_set_style_text_color(lbl, ARGUS_TEXT, LV_PART_MAIN);
-    lv_obj_set_style_text_font(lbl, &font_dh_label_14, LV_PART_MAIN);   // Orbitron (fits 118px tile)
+    lv_obj_set_style_text_font(lbl, &font_argus_label_14, LV_PART_MAIN);   // Orbitron (fits 118px tile)
     lv_label_set_text(lbl, label_text);
     lv_obj_align(lbl, LV_ALIGN_BOTTOM_MID, 0, -6);
 
@@ -287,7 +287,7 @@ static lv_obj_t *make_tile(lv_obj_t *parent, const char *label_text)
 
 // Put the HD sprite /Icons/<name>.png on a tile if it exists on the SD card,
 // otherwise fall back to the procedural draw_*_icon(). The sprites are the
-// DarkHorse HD icon set (tools/gen_icon_sprites.py -> transparent glyph + glow);
+// ARGUS HD icon set (tools/gen_icon_sprites.py -> transparent glyph + glow);
 // the fallback keeps every tile working when the card lacks the /Icons folder, so
 // dropping the art on the card is a pure visual upgrade with no firmware risk.
 // Same pattern as the HexHound pet sprite (pup_icon.png).
@@ -617,7 +617,7 @@ static void draw_deauth_impl(lv_obj_t *tile, lv_color_t ringc)
     lv_obj_clear_flag(badge, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(badge, LV_ALIGN_TOP_RIGHT, -18, 24);
     lv_obj_t *x = lv_label_create(badge);
-    lv_obj_set_style_text_font(x, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(x, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(x, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(x, "X");
     lv_obj_center(x);
@@ -927,7 +927,7 @@ static void draw_skimmer_icon(lv_obj_t *tile)
     lv_obj_align(badge, LV_ALIGN_TOP_RIGHT, -8, 26);
 
     lv_obj_t *bang = lv_label_create(badge);
-    lv_obj_set_style_text_font(bang, &font_dh_label_20, LV_PART_MAIN);
+    lv_obj_set_style_text_font(bang, &font_argus_label_20, LV_PART_MAIN);
     lv_obj_set_style_text_color(bang, lv_color_white(), LV_PART_MAIN);
     lv_label_set_text(bang, "!");
     lv_obj_center(bang);
@@ -1516,7 +1516,7 @@ static void on_handshake_clicked(lv_event_t *)
 // Threat Radar — concentric sweep rings with a single red blip, evoking a
 // radar scope. Rings are transparent circles with an ARGUS steel-blue border;
 // the blip is a contact riding a ring, the spoke a faint sweep line. (Fork drew
-// this in matrix-green; rethemed to the DarkHorse accent, threat blip in HADES.)
+// this in matrix-green; rethemed to the ARGUS accent, threat blip in HADES.)
 static void draw_radar_icon(lv_obj_t *tile)
 {
     tile = icon_layer(tile);
@@ -1748,7 +1748,7 @@ void tools_screen_create()
     // Title
     tools_title = lv_label_create(tools_screen);
     lv_obj_set_style_text_color(tools_title, argus_base_accent(), LV_PART_MAIN);
-    lv_obj_set_style_text_font(tools_title, &font_dh_label_28, LV_PART_MAIN);
+    lv_obj_set_style_text_font(tools_title, &font_argus_label_28, LV_PART_MAIN);
     lv_label_set_text(tools_title, "TOOLS");
     lv_obj_align(tools_title, LV_ALIGN_TOP_MID, 0, 8);
 
@@ -1822,7 +1822,7 @@ void tools_screen_create()
     lv_obj_t *t_tpms    = make_tile(grid, "TPMS");
     lv_obj_t *t_tesla   = make_tile(grid, "Tesla CP");
 
-    // DarkHorse HD sprites from SD /Icons/<name>.png, procedural draw_*_icon as
+    // ARGUS HD sprites from SD /Icons/<name>.png, procedural draw_*_icon as
     // fallback. Pager uses the procedural icon on purpose (the 13-37 gadget); Flipper
     // and HexHound keep their existing image icons.
     tile_icon(t_wifi,     "wifi",     draw_wifi_icon);

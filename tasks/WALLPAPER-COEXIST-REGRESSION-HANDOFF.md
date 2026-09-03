@@ -6,7 +6,7 @@ Build:  pio run -e twatch_ultra   (from the repo root; the pio CLI may not be on
 Flash:  ...pio.exe run -d ... -e twatch_ultra -t upload --upload-port COM19
 COM ports: DOWNLOAD mode = 303A:1001 = COM19 (only this flashes; BOOT+RESET to enter). App CDC = 303A:8227 = COM20.
           Serial monitor must open with DTR=False/RTS=False (see tasks/FLASHING-NOTES.md) or the S3 drops to download mode.
-GIT: branch darkhorse-argus. HEAD ~ d641b72. This is a REGRESSION CHECK, not a new-bug hunt. Do NOT revert either shipped
+GIT: branch argus-argus. HEAD ~ d641b72. This is a REGRESSION CHECK, not a new-bug hunt. Do NOT revert either shipped
      fix. Do not commit or push unless explicitly asked. No Co-Authored-By, no em dashes.
 
 READ FIRST: tasks/WALLPAPER-SAGA.md (the brownout history + the raw-RGB565 fix), tasks/COEXIST-NOTES.md (the RAM fix +

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 32 px
  * Bpp: 4
- * Opts: --font tools/brandfonts/SairaCondensed-SemiBold.ttf --size 32 --bpp 4 --no-compress --format lvgl --range 0x20-0x7F --lv-font-name font_dh_ui -o src/font_dh_ui.c
+ * Opts: --font tools/brandfonts/SairaCondensed-SemiBold.ttf --size 32 --bpp 4 --no-compress --format lvgl --range 0x20-0x7F --lv-font-name font_argus_ui -o src/font_argus_ui.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
@@ -10,11 +10,11 @@
 #include "lvgl/lvgl.h"
 #endif
 
-#ifndef FONT_DH_UI
-#define FONT_DH_UI 1
+#ifndef FONT_ARGUS_UI
+#define FONT_ARGUS_UI 1
 #endif
 
-#if FONT_DH_UI
+#if FONT_ARGUS_UI
 
 /*-----------------
  *    BITMAPS
@@ -2122,9 +2122,9 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
 
 /*Initialize a public general font descriptor*/
 #if LVGL_VERSION_MAJOR >= 8
-const lv_font_t font_dh_ui = {
+const lv_font_t font_argus_ui = {
 #else
-lv_font_t font_dh_ui = {
+lv_font_t font_argus_ui = {
 #endif
     .get_glyph_dsc = lv_font_get_glyph_dsc_fmt_txt,    /*Function pointer to get glyph's data*/
     .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt,    /*Function pointer to get glyph's bitmap*/
@@ -2146,5 +2146,5 @@ lv_font_t font_dh_ui = {
 
 
 
-#endif /*#if FONT_DH_UI*/
+#endif /*#if FONT_ARGUS_UI*/
 

@@ -1,4 +1,4 @@
-# DarkHorse ARGUS — host unit tests
+# ARGUS — host unit tests
 
 Pure-logic unit tests that run on the **host** (g++), no watch required. This is
 the engineering-rigor layer we bring to the 13-37 base: the security-critical
