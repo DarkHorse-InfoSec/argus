@@ -1,5 +1,238 @@
 # DarkHorse ARGUS Watch - Fork Plan
 
+## >>> SESSION 2026-09-03: SLOW GPS ACQUISITION. LOG REVIEW. <<<
+
+Reported: "It took a very long time to get a signal. I did multiple tests."
+
+Source artifact: `artifacts/field/20260903/Settings/gpshealth.log` (pulled off
+the card as `E:`, 197 records, 4 GPS power cycles). Analysis segments per power
+cycle: the file appends across reboots and rail cycles, so `on=` going
+backwards is the only honest segment boundary.
+
+### What the log measures
+
+| Cycle | Wall clock | Duration | Result | avg B/s | sats max | bad |
+|---|---|---|---|---|---|---|
+| 1 | 09-02 16:38-16:50 | 11m52s (partial) | already locked | 863.9 | 12 | 0 |
+| 2 | 09-02 16:54-17:11 | 16m45s | NEVER LOCKED | 378.3 | 0 | 0 |
+| 3 | 09-02 17:24-17:43 | 18m48s | locked at **11m17s** | 562.7 | 6 | 0 |
+| 4 | 09-03 09:36-10:25 | 48m35s | NEVER LOCKED | 369.3 | 0 | 0 |
+
+Byte rates are averaged from the cumulative `chars` counter over the whole
+window, NOT from the instantaneous `bps` sample, so a main-loop stall cannot
+skew them.
+
+Measured negatives, all of which rule something out:
+
+- **No byte loss anywhere.** `bad=0` across ~103,000 sentences over all four
+  cycles. The 2048-byte RX ring is holding; this is not the 2026-08-03 failure.
+- **The receiver was alive and talking in every cycle.** 369-864 B/s, always
+  far above `kGpsNoDataFloorBps`. Never once classified `NoData`.
+- **The rail was never cut mid-test.** `on=` climbs monotonically 0 -> 2915s
+  through cycle 4, so nothing (sleep, mode change) power-cycled the GPS during
+  a 48-minute run.
+- **Radio coexistence is not a factor.** `wifi=0` and `lora=0` in all four
+  cycles, and the ONE healthy cycle had the MOST BLE consumers (`ble=4`) while
+  the 48-minute total failure had the fewest (`ble=2`).
+
+What actually differed between cycles is how much satellite data reached the
+antenna, and the byte rate shows it directly because GSV length scales with
+satellites in view:
+
+- Cycles 2 and 4 sat pinned at the empty-stream floor. Cycle 2: 378.1 B/s in
+  its first half, 378.6 in its second. Cycle 4: 369.4 then 369.1. Flat for
+  16m45s and 48m35s respectively - the receiver never saw anything.
+- Cycle 3 climbed: 458.8 B/s average before the first satellite entered the
+  fix, 639.7 after, and it was already at 421 B/s on its first 30 s sample.
+  Satellites accumulated steadily and a fix followed at 11m17s with only 4-6
+  satellites used. That is a marginal-sky acquisition, not a stalled one.
+
+### FINDING 1 - the health classifier reads the wrong field (CODE-VERIFIED)
+
+`gps_health_classify()` takes `sats` from `instance.gps.satellites`, which
+TinyGPSPlus binds to **GGA field 7, "Satellites used"**
+(`.pio/libdeps/twatch_ultra/TinyGPSPlus/src/TinyGPS++.cpp:277`). That is
+satellites in the position solution, NOT satellites in view.
+
+Consequences:
+
+1. `sats == 0` is very nearly synonymous with "no fix", so the
+   `NoSatellites` vs `Acquiring` split cannot carry the meaning
+   `gps_health.h` claims for it. The header says NoSatellites means
+   "receiver sees nothing -> sky"; the field does not support that reading.
+2. The hint is therefore wrong exactly when it matters. Through the first
+   8 minutes of cycle 3 the watch displayed **"No sats / Needs open sky"**
+   while the byte rate was climbing 421 -> 513 B/s, i.e. the receiver was
+   visibly making progress and the correct advice was "hold still, it is
+   working". Cycle 3 logged 16 ticks of `state=No sats` before 7 ticks of
+   `Acquiring`.
+3. `Acquiring` can never be reported until GGA already carries a partial
+   solution, which makes it nearly dead code on a cold start.
+
+The stream already carries the right answer in **GSV** (satellites in view plus
+per-satellite C/N0) and the firmware parses none of it - there is no
+`TinyGPSCustom` anywhere in `src/`. Note the irony: the byte rate the health
+log already records is a BETTER visibility proxy than the field the classifier
+actually branches on.
+
+Fix (not started): add `TinyGPSCustom` taps for GSV satellites-in-view and
+C/N0, classify on in-view rather than used-in-fix, and add a
+`state=Downloading` / "satellites in view, downloading almanac" case for
+"in view > 0, used == 0". Host tests belong in `test/test_gps_health.cpp`
+alongside the existing cases.
+
+### FINDING 2 - cold start is real but is NOT the explanation (DEMOTED)
+
+`POWER_GPS` off is a bare `pmu.disableBLDO1()`
+(`lib/LilyGoLib/src/LilyGoWatchUltra.cpp:700`), and BLDO1 is the MIA-M10Q's
+only rail on this board. If V_BCKP hangs off it, the module loses its RTC,
+almanac and ephemeris on every toggle and on every `sleep()` (same file, line
+757). The V_BCKP wiring is NOT verified - the only schematic in the repo is
+`T-Watch-S3-Plus-GPS V1.0`, a different board. `GPS::factory()` is never called
+by the app (checked), so the firmware at least is not wiping module config at
+boot.
+
+**But this does not explain the reported symptom, and the reason is prior
+measured evidence.** The 2026-08-04 close-out measured a **66-second cold
+start** in clear sky (see memory `argus-gps-is-reception-not-hardware`, where
+slow acquisition was refuted by its own artifact). So an unretained V_BCKP
+costs about a minute when there IS sky - not 11 minutes, and not the total
+failure of cycles 2 and 4, where a cold-start receiver would still have brought
+satellites into view and raised the byte rate. It did not.
+
+Retaining BBR is therefore a nice-to-have worth maybe a minute of TTFF, not the
+root cause. Do not spend a session on AssistNow or a rail redesign on the
+strength of this log.
+
+**Second piece of counter-evidence, which finishes it off: hot starts have
+already been OBSERVED on this watch.** Both prior GPS memories record a fix at
+`on=0s` with only ~200 chars processed, and the 2026-08-04 wardrive was
+reconstructed as `TTFF ~0` on that basis. That means the module does retain
+ephemeris across at least some power cycles, so the "V_BCKP is dead, everything
+is a cold start" story is contradicted by the record. Treat Finding 2 as CLOSED
+unless a log shows a consistently cold TTFF after a short off/on in known-good
+sky.
+
+This also reframes cycle 2, which was the one result that looked anomalous. If
+ephemeris is retained, a restart 3m36s after a 12-satellite fix should have
+produced a fix within seconds GIVEN SKY. It produced nothing, and the byte rate
+never left the empty floor, so the sky is what changed. That is consistent with
+the closed saga rather than a reason to reopen it - but it still rests on where
+the watch physically was, which only Domenic can supply.
+
+Instrumentation note: the file opens with `-- rotated (size cap) --`, which is
+why cycle 1 is partial and its acquisition is unrecoverable. 64 KB at ~160 B
+per 30 s heartbeat is ~3.4 h of continuous GPS, so any longer session loses its
+own beginning - exactly the acquisition window. Same trap recorded in the
+2026-08-04 memory; it bit again here.
+
+### RESOLVED 2026-09-03 - reception, and one genuine UI defect
+
+Domenic supplied the missing variable:
+
+- ~1700 block: **at his mom's, then in a car driving home.**
+- 0936-1025: **inside a building, plugged into the laptop.**
+
+That maps onto the cycles exactly, and cycle 1 - which I had written off as
+"already locked, uninteresting" - turns out to be the one that explains
+everything:
+
+| Cycle | Where | What the numbers say |
+|---|---|---|
+| 1 | arriving / inside at mom's | fix HELD while degrading: sats-used 12 -> 5, byte rate flat ~860 |
+| 2 | inside at mom's, GPS re-toggled | nothing, 16m45s, byte rate pinned 378 |
+| 3 | car driving home | acquired steadily, locked 11m17s, 4-6 sats used |
+| 4 | inside, on the laptop | nothing, 48m35s, byte rate pinned 369 |
+
+**Cycle 1 vs cycle 2 is the whole story, and it is textbook GNSS.** At 16:50:39
+the watch was indoors holding a fix on 5-8 satellites with the byte rate still
+at ~860 B/s, i.e. a full GSV of satellites in view. GPS was toggled off, then
+on 3m36s later in the same building - and from a standing start it saw
+absolutely nothing for 16m45s.
+
+That is the gap between **tracking sensitivity and acquisition sensitivity**: a
+receiver already locked onto a satellite can hold it far below the C/N0 it
+needs to find it cold. So a fix that survives being carried indoors cannot be
+re-established indoors. Nothing was broken between 16:50 and 16:54; the fix was
+simply thrown away and could not be rebuilt.
+
+Note what this makes of cycle 1's own trace: sats-used 12 -> 5 while the byte
+rate never moved off ~860. In-view and used-in-fix diverged by more than a
+factor of two in the same cycle. That is Finding 1's point visible in the data.
+
+Cycles 2 and 4 are therefore expected, not defects - a watch antenna inside a
+building sees nothing, and 48 minutes of it on a charger is just 48 minutes of
+nothing. Cycle 3's 11m17s in a moving car (metallised windshield, arm down) is
+slow but was genuine, continuous progress the entire time.
+
+**The only real defect is Finding 1, and it is exactly the reported
+complaint.** In the car the watch WAS acquiring for the full 11 minutes and
+told the user it saw nothing ("No sats / Needs open sky") for the first 7.5 of
+them. "It took a very long time to get a signal" is, in the one cycle where a
+signal was actually available, a UI problem: the watch had the information to
+say "in view, working on it" and said the opposite.
+
+So: no firmware or hardware fault. `argus-gps-is-reception-not-hardware` stays
+closed. Fix Finding 1.
+
+Two things the GSV work should carry, both earned here:
+
+1. Log per-satellite **C/N0**. It is the one number that would have settled
+   cycle 1 vs cycle 2 outright instead of by inference from byte rate.
+2. Consider warning on the GPS toggle: turning the radio off while indoors
+   discards a fix that will not come back until there is sky again. Cycle 1 was
+   a usable fix and cycle 2 was 17 minutes of nothing, separated only by that
+   switch.
+
+### IMPLEMENTED 2026-09-03 (host-verified + builds; NOT yet hardware-verified)
+
+- **`src/gps_gsv.{h,cpp}` (NEW, pure, host-tested)** - GSV accumulator giving
+  satellites IN VIEW and their C/N0. Deliberately ignores the numMsg/msgNum/
+  numSV fields and counts DISTINCT `(talker, svid)` pairs on a TTL instead, so
+  no assumption about how many talkers or signals this receiver emits can be
+  wrong. Multi-signal duplicates of one satellite collapse; the same id under
+  two talkers stays two satellites. Validates its own NMEA checksum rather than
+  trusting TinyGPSPlus, because it keeps separate state from the same stream.
+- **`gps_health_classify()` now takes `in_view` and `cno_max`**, not
+  used-in-fix. Used-in-fix is no longer a parameter at all, so the inversion
+  cannot come back by accident.
+- **New `WeakSignal` state** - in view but the best C/N0 is under
+  `kGpsCnoAcquireDb` (25 dB-Hz). Same action as NoSatellites, but a far more
+  credible thing to say, and it is what indoors actually looks like.
+  `Acquiring` now means what it says: in view, acquirable, no fix yet.
+- **`gps_screen_pump()`** replaces `instance.gps.loop()` at the single call site
+  in `main.cpp`. The library's loop() reads the port itself and left no way to
+  tee the stream; this drains the port once per main-loop iteration, exactly as
+  before, and feeds both parsers. Every TinyGPSPlus counter the health log
+  reports is still driven by `encode()`.
+- **Log line carries `view=` and `cno=`**; `tools/gpshealth_ttff.py` parses
+  them and still reads pre-2026-09-03 logs (the fields are optional in the
+  regex, and absent reads as None, never as a recorded zero).
+- **Satellites row shows both**: "5 / 11 in view 38dB", because the two
+  diverged by more than 2x inside cycle 1 and showing one hides the story.
+- **Toggle warning**: switching the radio off while it held a fix sets the
+  Status row to "Off - fix discarded". Put in that row rather than the header
+  label, which is auto-sized and offset +60 from centre and would run off the
+  right edge.
+
+Verification status, stated precisely:
+
+- Host suite **4509 checks, 0 failures** (was 4448; +15 GSV tests, +1 health
+  test, all named in the run output). Covers dedup, multi-talker, blank C/N0,
+  bad checksum, TTL expiry, buffer overrun, table saturation and the millis()
+  rollover.
+- `pio run -e twatch_ultra` **SUCCESS**, flash 94.7% (2,977,489 of 3,145,728),
+  RAM 53.6%. Up from 94.6%/53.3%. **Flash is tight** - 168 KB of headroom left.
+- **NOT verified: that this receiver's actual GSV matches what the parser
+  expects.** The sentence shapes were written from the NMEA spec and u-blox
+  NMEA 4.11 documentation, not from a capture off THIS module. Nothing here has
+  run on hardware. Cheapest close-out: flash, enable GPS, and read `view=` and
+  `cno=` in `/Settings/gpshealth.log` - indoors they should show a nonzero
+  in-view count at low C/N0 (state `Weak sig`), which is a real test of the
+  whole chain and needs no sky.
+
+---
+
 ## >>> SESSION 2026-09-02: CLOCK 7 HOURS SLOW. THE RTC/OFFSET PAIR. <<<
 
 Reported: face read **6:54 AM at 1:55 PM local** - 7h01m slow, i.e. a
