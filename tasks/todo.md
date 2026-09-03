@@ -1,5 +1,123 @@
 # DarkHorse ARGUS Watch - Fork Plan
 
+## >>> SESSION 2026-09-02: CLOCK 7 HOURS SLOW. THE RTC/OFFSET PAIR. <<<
+
+Reported: face read **6:54 AM at 1:55 PM local** - 7h01m slow, i.e. a
+whole-hour offset error plus about a minute of RTC drift, not an arbitrary
+stale seed.
+
+### What was actually wrong in the code (audited, not measured on the device)
+
+The face is a PAIR - the RTC (documented UTC) plus `clock_utc_offset`
+(persisted to `/Settings/timezone.txt`). Four writers, two of them broken:
+
+| Writer | Wrote | Offset | Verdict |
+|---|---|---|---|
+| GPS fix (`gps_screen.cpp`) | UTC | set + persisted | OK |
+| NTP (`timezone_bg_tick`) | UTC | set + persisted | OK |
+| Manual Time | **LOCAL** | set to 0 **in RAM only** | BROKEN |
+| Build-time fallback | **LOCAL** | never touched (stays -4) | BROKEN |
+
+Manual Time is the one that produces exactly this symptom. `manual_time=1` is
+saved to `settings.txt`; the matching `offset=0` was saved nowhere. So the next
+boot restored the last DETECTED offset and applied it to an RTC holding local
+time. A watch that last had a GPS fix in Las Vegas (UTC-7) and was then set by
+hand in Vermont comes back up 7 hours slow. That arithmetic matches the report
+exactly, but it has NOT been confirmed against the device - see "still to
+check" below.
+
+### The fix
+
+Single invariant, enforced at every writer: **the RTC holds UTC, and whatever
+writes it also records the offset that maps it back to local.**
+
+- `src/clock_time.{h,cpp}` (NEW, pure, host-tested): `local_to_utc`,
+  `utc_to_local`, `tm_utc_to_local`, `offset_plausible`,
+  `effective_saved_offset`. Civil-date arithmetic, no `mktime()` - see
+  lessons.md for why. Replaces the three hand-rolled copies of
+  `tm_hour += off; mktime()` in main.cpp.
+- Manual Time converts the entered local time to UTC and **persists the offset
+  it converted with**.
+- The build-time fallback peeks at the saved offset, stores UTC, and is rebased
+  after `timezone_load_on_boot()` if the restored offset differs.
+- `/Settings/timezone.txt` is now versioned (`offset=<h> v=2`). A v1 file read
+  while Manual Time is ON is migrated to `offset=0`, which is the value the old
+  firmware failed to write - so an affected card **self-heals on the first boot
+  of this build**.
+- One `[clock]` line on the serial console at boot: RTC, offset, manual flag,
+  build-seed flag. The next report of this is measurable instead of inferred.
+- `test/test_clock_time.cpp`: 7 tests, round trips over the cross-product of
+  every legal offset x every hour, plus month/year/leap boundaries and the
+  v1 migration table.
+
+### RESOLVED 2026-09-02, verified on the device
+
+After Manual Time was used to enter the correct local time on the fixed build,
+and Manual Time then switched back off:
+
+```
+[tz] file offset=-4 v=2 manual=0 -> paired=-4
+[clock] rtc(utc)=2026-09-02 19:29:05 utc_off=-4 manual=0 seeded=0
+```
+
+Host `date -u` read 19:29:25 about twenty seconds after that line printed, so
+the RTC is within a second or two of true UTC. All four state elements agree:
+RTC holds real UTC, offset is the correct -4, the card record has migrated to
+`v=2`, and `manual=0` means GPS/NTP will maintain it rather than being blocked.
+
+Note the recovery only worked because the entry ran on the FIXED build:
+`clock_screen_apply_manual_time()` now converts the entered local time with the
+offset in force (15:29 + 4 = 19:29 UTC). On the old build the same keystrokes
+would have written 15:29 into the RTC and re-created the original defect.
+
+### MEASURED on the device 2026-09-02 (boot log, after flashing this build)
+
+```
+[tz] file offset=-4 v=1 manual=0 -> paired=-4
+[clock] rtc(utc)=2026-09-02 12:15:13 utc_off=-4 manual=0 seeded=0
+```
+
+Real local at that instant was ~15:15 EDT, so true UTC was ~19:15.
+
+- **The offset was never wrong.** `-4` is correct for Eastern DST, and it came
+  off the card, not from the compiled-in default.
+- **The RTC was wrong: 12:15 against a true UTC of 19:15, i.e. 7 h behind.**
+  12:15 is Eastern-minus-3, which is PACIFIC WALL CLOCK. The RTC had been
+  running as a Las Vegas clock since DEF CON and nothing had re-synced it.
+- Manual Time was OFF at boot, so the v1 migration did not fire and `paired`
+  came back unchanged at -4.
+
+So the face was 7 h slow because it subtracted a correct 4 from a register that
+was already 3 behind. All three pre-measurement hypotheses named the wrong
+half: every one of them assumed the OFFSET was wrong. The RTC was.
+
+**This build does not repair an already-corrupted RTC** and flashing it changed
+nothing on the face. It removes the writer that corrupts the RTC in the first
+place (old Manual Time wrote local wall clock into a register the world clock,
+Meshtastic and every log stamp read as UTC). Recovery needs a real time source:
+Settings > Set Time on this build (converts with the -4 in force, so the RTC
+lands on true UTC), or a WiFi/NTP sync, or a GPS fix.
+
+### Why "turn Manual Time off and connect WiFi" did nothing
+
+The Tools grid is hidden entirely in Daily mode (`tools_apply_mode()`,
+tools_screen.cpp:2024, `default: visible = false`), and `wifi_screen_show()` is
+the only path that scans and calls `WiFi.begin()`. Turning the radio on from the
+Daily UI never associates, so `ARDUINO_EVENT_WIFI_STA_GOT_IP` never fires and
+the NTP/geolocation worker never runs. Joining a network requires Defense mode,
+with Bluetooth off (`ARGUS_RADIO_COEXIST` is not in the build flags, so
+`start_scan()` refuses while the BLE controller is up).
+
+### Known remaining gap: the watch cannot tell that its own RTC is lying
+
+With Manual Time on, the offset is whatever was last detected, so the RTC's
+"UTC" can be honestly wrong even while the face is right - the world clock and
+the Meshtastic screen stay skewed. There is no UI to set the UTC offset
+directly; the clean exit is to turn Manual Time OFF and let a GPS fix or a WiFi
+connect set both halves. A zone picker in Settings would close it properly.
+
+---
+
 ## >>> SESSION 2026-08-04: THE CLEAR-SKY WARDRIVE. GPS QUESTION CLOSED. <<<
 
 A 44-minute drive, 08:37:36-09:21:53, card pulled afterwards. This is the test
@@ -943,14 +1061,14 @@ instrumentation + smaller AM/PM. To pick them up: from stable download mode
 ---
 
 
-Base: fork of `r3dfish/13-37` (upstream remote), branch `darkhorse-argus`, LOCAL ONLY (no push yet).
+Base: fork of `r3dfish/13-37` (upstream remote), branch `argus-argus`, LOCAL ONLY (no push yet).
 Goal: take the T-Watch Ultra to the next level for cybersecurity red/blue team,
 while keeping it a full watch (clock/alarms/timer/calendar). Bring ARGUS's
 engineering rigor (testable modules + host unit tests) and DarkHorse/HADES
 branding to the proven 13-37 base; cherry-pick Threat Radar (MIT) features.
 
 ## Phase 0 — Baseline — DONE (commit 8afd220)
-- [x] Clone r3dfish/13-37, remote `upstream`, branch `darkhorse-argus`
+- [x] Clone r3dfish/13-37, remote `upstream`, branch `argus-argus`
 - [x] Reproducible-build fix: vendored LilyGoLib/ST25R3916/NFC-RFAL into lib/ at
       exact commits; baked in the two LilyGoLib patches; retired patch_lilygolib.py
 - [x] Baseline flashed + confirmed on hardware (13-37 clock, upright/readable)
@@ -1089,7 +1207,7 @@ BEFORE wiring hardware integration; cheaper than a flash cycle.
 3. Open feature question: phone notifications over BLE (iPhone/ANCS first). Discussed;
    sequence after integration since it leans on the BLE stack.
 
-## Session commits (darkhorse-argus, LOCAL only, none pushed)
+## Session commits (argus-argus, LOCAL only, none pushed)
 - d31e7a8 fix(clock) stale-pixel ghosting  [FLASHED + user-confirmed]
 - 0c077a0 feat(ble) advertisement parser + tests
 - 9205bc7 feat(background) oversized-image OOM guard + tests  [PENDING FLASH]
