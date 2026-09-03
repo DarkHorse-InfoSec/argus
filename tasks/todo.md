@@ -215,22 +215,79 @@ Two things the GSV work should carry, both earned here:
   label, which is auto-sized and offset +60 from centre and would run off the
   right edge.
 
+### HARDWARE-VERIFIED 2026-09-03, indoors
+
+Flashed and confirmed on the watch. The caveat below ("NOT verified: that this
+receiver's actual GSV matches what the parser expects") is now CLOSED - the
+parser was written from the NMEA spec and never from a capture off this module,
+and it turns out to be right:
+
+```
+view=1 cno=10  state=Weak sig
+view=1 cno=13  state=Weak sig
+view=1 cno=8   state=Weak sig
+view=1 cno=26  state=Acquiring     <- crosses the 25 dB-Hz threshold
+view=0 cno=0   state=No sats
+```
+
+- GSV parses off the real MIA-M10Q: satellites extracted, not a constant zero.
+- C/N0 values are real and correctly positioned: 8-13 dB-Hz indoors with
+  occasional 26 and 34. Wrong quad indexing would have surfaced elevation
+  (0-90) or azimuth (0-359) values here instead.
+- `WeakSignal` fires (5 ticks) and `Acquiring` fires at 26 dB-Hz. The
+  25 dB-Hz threshold, chosen from physics rather than from our data,
+  discriminates correctly on real signals.
+- `bad=0` across 15153 sentences this cycle: `gps_screen_pump()` replacing
+  `instance.gps.loop()` loses no bytes.
+- `tools/gpshealth_ttff.py` reads the new fields off a real file.
+
+### FIXED 2026-09-03: a log record that contradicted itself
+
+Bring-up exposed a defect introduced by this very change:
+
+```
+13:41:20 MODE ... view=1 cno=34 ... state=No sats
+```
+
+`view`/`cno` were sampled fresh inside `gps_health_capture()`; `state` is the
+cached `s_health_state`, recomputed once per second. On a TICK both refresh in
+the same call chain and agree. MODE and OFF are emitted the instant the event
+happens, so those three fields described two different moments - and a future
+investigation reading that line would conclude the mode switch killed the sky.
+
+Fixed by caching `s_health_view` / `s_health_cno` next to `s_health_state`, so
+one snapshot drives both the classification and the record.
+
+Deliberately NOT fixed by recomputing the state at capture time. The OFF record
+is emitted after `gps_powered` has already gone false, so recomputing would
+always classify it "Off" and destroy the one thing that record exists to
+preserve: that the radio was LOCKED when the user switched it off. That is
+visible in the 2026-09-02 log (`OFF ... stable=1 state=Locked`) and the
+"fix discarded" warning depends on it.
+
+### FIXED 2026-09-03: the card reader was unreachable in Daily
+
+Reported: mounting the SD to a host required switching to Defense first.
+
+Cause: `tools_apply_mode()` (`src/tools_screen.cpp`) hides the whole Tools grid
+in Daily, and `usb_sd_screen_show()` was only reachable from a Tools tile. The
+code comment there already recorded it as a known gap ("Daily gates the whole
+grid, so those have no other home yet").
+
+NOT fixed by un-gating the grid in Daily. Daily is the innocent-watch mode and
+the grid's absence IS the disguise; showing it would defeat the mode's purpose.
+Instead a "USB SD card reader" entry was added to Settings, which is reachable
+in every mode via a BOOT press from the clock face. Mounting a card as a USB
+drive is what any ordinary device does - it costs nothing to expose and needs
+no hiding. Confirmed working in Daily on hardware.
+
+Notify and LoRa APRS are in the same neutral class and remain Tools-only, on
+purpose: APRS is an RF transmitter, so whether it belongs in Daily is a real
+question rather than an oversight.
+
+### Original verification status (kept for the record)
+
 Verification status, stated precisely:
-
-- Host suite **4509 checks, 0 failures** (was 4448; +15 GSV tests, +1 health
-  test, all named in the run output). Covers dedup, multi-talker, blank C/N0,
-  bad checksum, TTL expiry, buffer overrun, table saturation and the millis()
-  rollover.
-- `pio run -e twatch_ultra` **SUCCESS**, flash 94.7% (2,977,489 of 3,145,728),
-  RAM 53.6%. Up from 94.6%/53.3%. **Flash is tight** - 168 KB of headroom left.
-- **NOT verified: that this receiver's actual GSV matches what the parser
-  expects.** The sentence shapes were written from the NMEA spec and u-blox
-  NMEA 4.11 documentation, not from a capture off THIS module. Nothing here has
-  run on hardware. Cheapest close-out: flash, enable GPS, and read `view=` and
-  `cno=` in `/Settings/gpshealth.log` - indoors they should show a nonzero
-  in-view count at low C/N0 (state `Weak sig`), which is a real test of the
-  whole chain and needs no sky.
-
 ---
 
 ## >>> SESSION 2026-09-02: CLOCK 7 HOURS SLOW. THE RTC/OFFSET PAIR. <<<
