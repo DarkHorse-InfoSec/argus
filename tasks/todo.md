@@ -1,5 +1,255 @@
 # ARGUS Watch - Fork Plan
 
+## >>> SESSION 2026-09-03 (later): DST COMMITTED. DEMO VIDEOS. MEMORY AUDIT. <<<
+
+Host suite re-verified this session: **4966 checks, 0 failures** (exit 0).
+
+### DONE
+
+- **`fbec431` fix: apply daylight saving per zone in the World Clock.**
+  Domenic confirmed on the device: LA UTC-7, Denver UTC-6, New York UTC-4,
+  Paris UTC+2, Sydney UTC+10, Honolulu / UTC / Moscow / Dubai / Tokyo
+  unchanged, LOCAL UTC-4 agreeing with the face. Signature verified via
+  `git cat-file -p HEAD` (the `--show-signature` "No signature" output is a
+  local-verification artifact, not a signing failure).
+  `src/clock_time.{h,cpp}` was deliberately NOT included: `days_from_civil` is
+  used only by `clock_sync.cpp`, so it belongs with the clock-trust commit.
+  `test/Makefile` was split by hand so each commit's tree builds alone.
+
+- **Memory index audited.** Confirmed 13 of 33 files unreachable, then decided
+  each individually rather than bulk-adding. Now 34 files / 31 index lines.
+  Indexed 9: public-release-state, airtag-field-test, never-paste-real-captured-data,
+  sd-logs-gps-precision, wifi-ble-coexist-was-ram-not-rf, coredump-needs-matching-elf,
+  defcon34-con-readiness (for the flash/partition answer),
+  feedback-evidence-discipline, dont-assert-absence-from-a-partial-file-read.
+  Folded 2 durable facts out of `argus-flashing-and-verification-gotchas` (the
+  rebuild-changes-SHA-256 fact and the SCons transient) into the current
+  flashing memory. Left 4 unindexed on purpose: that folded file,
+  `argus-gps-slow-fix-not-dead-radio` (fully superseded),
+  `wallpaper-coexist-regression-passed` (closed) and
+  `colonelpanic-remote-id-coexist` (third-party, no current action).
+
+- **Demo video pipeline built**: `tools/make_demo_reel.py`. See below.
+
+### CORRECTION: the Threat Radar field claim is understated, in the README
+
+This handoff, the README's Threat Radar "Field status" line, and a project
+memory all say Threat Radar "has not yet been validated end to end against a
+real tracker performing a real tail over distance". **The record contradicts
+that.** `argus-tracker-strobe-fix-field-pending` measured it: on 2026-07-30 a
+real AirTag on an outdoor drive reached **LIKELY** at 08:50:34 across **21
+waypoints** and a **7496 m** span, peak RSSI -54.
+
+What has never been observed end to end is the **CONFIRMED** rung (>=4 cells,
+>=18 min co-moving). So:
+
+- The promotion gate is NOT "one real tail test" - one has passed. It is
+  **observe the Confirmed rung**, which needs a longer route than 07-30's.
+- **The public README line needs fixing.** It understates the evidence behind a
+  safety feature. Accurate wording: validated to the Likely rung against a real
+  Find My tracker over a 7.5 km drive (2026-07-30); Confirmed not yet observed
+  end to end. This is a docs fix, not a code change.
+
+The three agreeing sources were not independent - they all descend from one
+paraphrase. See `tasks/lessons.md` for the entry.
+
+### BLOCKED: the clock-trust row could not be found on the watch
+
+Asked Domenic what the Settings clock-trust row reads. Answer: **"I don't see
+clock-trust in the settings."** So `src/clock_sync.{h,cpp}` + the Settings row
++ `src/clock_time.{h,cpp}` + `src/timezone.{h,cpp}` + `src/main.cpp` stay
+UNCOMMITTED.
+
+Static checks that came back clean, so this is NOT any of them:
+
+- `MAX_SHIFTABLE` is 64 and the runtime registration count is **48** (32 direct
+  call sites, 10 from the 5 manual-time rollers registering twice each, 6 boot
+  rows). Nothing is being silently dropped, so the row still gets its
+  manual-time -230px shift.
+- `clocksync::is_stale()` returns **true** for an invalid stamp, so the
+  never-synced case renders at full brightness (`ARGUS_TEXT`), not dim.
+- Nothing hides it: the only `LV_OBJ_FLAG_HIDDEN` users in the file are the
+  hour-format / AM-PM / seconds rows and the manual-time group.
+- The missing `lv_label_set_long_mode()` is not it either: `mode_hint` on the
+  same screen also sets a width without one and renders fine.
+- It is registered at design y=**2250**, i.e. directly ABOVE the "USB SD card
+  reader" button, which moved 2270 -> 2290 in the same change.
+
+**Next step, and it needs the device:** scroll Settings to the "USB SD card
+reader" button and look at the single line of text immediately above it. It is
+a plain label, not a button and not under its own section heading, which is the
+most likely reason it was scrolled past. If it genuinely is not there, capture
+the screen with the Screenshot long press toggle (hold >=3 s, needs a writable
+card, so USB-SD must not have it claimed) and read `/Screenshots/`.
+
+### DEFECT FOUND BY THE SIMULATOR: LV_SYMBOL tofu on the Threat Radar banner
+
+Domenic's feedback on the first sim reel: "it only does the one mode, doesn't
+show any of the security tools, it shows how basic it is." Fixing that meant
+compiling `tools_screen.cpp` + `threat_radar_screen.cpp`, and rendering the
+Radar screen immediately exposed a real current-source defect.
+
+**`src/threat_radar_screen.cpp` puts `LV_SYMBOL_*` glyphs on labels styled with
+the ASCII-only brand fonts, so they render as tofu boxes.** Same bug as
+`argus-brand-font-eats-lv-symbols`, still live, and on the flagship screen:
+
+| line | string | label font | result |
+|---|---|---|---|
+| 106 | `LV_SYMBOL_WARNING "  SOMEONE IS FOLLOWING YOU"` | `font_argus_label_16` | **TOFU** |
+| 109 | `LV_SYMBOL_EYE_OPEN "  Possible tail - keep watching"` | `font_argus_label_16` | TOFU |
+| 112 | `LV_SYMBOL_OK "  Clear - nothing co-moving"` | `font_argus_label_16` | TOFU |
+| 67  | `LV_SYMBOL_BELL` (community flag) | `font_argus_label_14` | TOFU |
+| 77  | `LV_SYMBOL_GPS` (waypoint/metres line) | `font_argus_label_14` | TOFU |
+| 216 | `LV_SYMBOL_TRASH "  CLEAR"` | `lv_font_montserrat_16` | **renders fine** |
+
+Line 216 is the control: same file, same symbol mechanism, and it works purely
+because that label is explicitly styled montserrat. That is the diagnosis
+confirmed by contrast rather than by inference.
+
+**Line 106 is the one that matters.** "SOMEONE IS FOLLOWING YOU" is the
+highest-stakes string in the product and it leads with a broken glyph. The file
+even carries a comment at line 58 acknowledging the constraint ("Separators
+here are ASCII on purpose: font_argus_label_* cover U+0020..U+007E") while
+still using `LV_SYMBOL_*` on those same labels.
+
+NOT fixed in this session - it is a design choice, not a mechanical fix:
+- **Option A:** style those labels `lv_font_montserrat_16`, exactly as the CLEAR
+  button in the same file already does. Icon works; the banner loses the brand
+  face.
+- **Option B:** drop the symbols from the strings. Brand face kept; no icon.
+- **Option C:** draw the icons from primitives, the way the timer/stopwatch/
+  charge-bolt icons do (the approach the font memory recommends). Most work,
+  keeps both.
+
+---
+
+### LVGL SIMULATOR (new) - demo footage from CURRENT source
+
+Domenic's follow-up: "all of those screenshots are dated. Very very old. You
+should run the demo on the watch or on the laptop, download whatever software
+you need." Correct - every `img/argus/*.png` predates the rebrand. Built the
+laptop path.
+
+**`sim/` builds the REAL screen source against LVGL's SDL backend on this box.**
+Nothing needed installing: SDL2 headers + SDL2.dll + sdl2-config were already
+in msys64, and LVGL 9.5.0 source is in `.pio/libdeps`. `make frames` renders
+current source and dumps one PPM per frame from `lv_snapshot_take()`, i.e.
+LVGL's own renderer. Time is driven by fixed `lv_tick_inc` steps, so captures
+are deterministic rather than a screen recording.
+
+Compiles the actual firmware files - `time_screen`, `world_clock_screen`,
+`calendar_screen`, `stopwatch_screen`, `timer_screen`, `theme`, `argus_mode`,
+`dst_rules`, `clock_time` and all nine `font_argus_*.c` - against a ~25-line
+shim for `instance` (rtc/pmu/gps), SD, Arduino and Preferences.
+`clock_screen_get_local_time()` / `_get_utc_offset()` are implemented for REAL
+via `clocktime::tm_utc_to_local`, not stubbed, so the LOCAL row is computed
+exactly as on the watch.
+
+Output: `artifacts/demo/argus-sim-{vertical,square,wide}.mp4`, 690 frames,
+23 s at 30 fps. Built with
+`python3 tools/make_demo_reel.py --sim-frames sim/build/frames`.
+
+**NOT in the simulator, and why:**
+- **The watch face.** `clock_screen_show()` lives in `main.cpp` (2699 lines,
+  95 includes, WiFi/BLE/mesh/detectors). Not separable at sane cost. For that,
+  use the existing `[env:screenshots]` env - it walks 12 screens and dumps each
+  to `/Screenshots/*.bmp`, and is where the July PNGs came from. Needs a flash
+  cycle, so NOT done without Domenic's say-so.
+- `alarm_screen.cpp`: needs 18 `alarm_*` entry points, and `alarm.cpp` pulls in
+  ESP-IDF `driver/i2s.h` + `SD.open/mkdir`. Its screen renders only defaults.
+- `tools_screen.cpp`: 34 includes, i.e. the entire detector suite.
+
+**Two things the simulator CAUGHT, both by measurement rather than by eye:**
+
+1. **Every World Clock zone row was +1 hour** on first run (UTC read 02:24 for
+   an 01:24 UTC clock; Honolulu, which has NO DST, read 16:24 not 15:24) while
+   the LOCAL row was right. Cause: `zone_hm()` normalises with `mktime()`, and
+   its comment states the assumption that makes that safe - "system TZ is
+   UTC-neutral on this build" - which holds on the ESP32 and NOT on a laptop in
+   a DST zone. Fixed by pinning `TZ=UTC` in the harness, i.e. making the host
+   match the environment the firmware documents rather than patching firmware
+   to suit the simulator. The DST offset LABELS were correct throughout.
+   Worth knowing: that UTC-neutral dependency is real but unstated in the
+   firmware. Not changed.
+2. **Daily / Defense / Likely-threat frames of the TIME screen are
+   BYTE-IDENTICAL** (image-diffed, not eyeballed). That is correct behaviour -
+   `time_screen.cpp` uses `argus_base_accent()`, red is Offense-only, and
+   threat-reactive `argus_accent()` belongs to live-threat surfaces. The
+   storyboard originally cut between all three; that would have sold a
+   difference that does not exist, so it is now ONE scene.
+
+**Independent confirmation of `fbec431`:** the rendered World Clock reads
+LOCAL/NY UTC-4 21:24, Honolulu UTC-10 15:24, LA UTC-7 18:24, Denver UTC-6
+19:24, Paris UTC+2 03:24, Moscow UTC+3 04:24, Dubai UTC+4 05:24 against a
+01:24 UTC clock - every row exactly UTC+offset, DST applied per zone. Matches
+Domenic's device check. The calendar also cross-checks: it highlights 3 under
+Thursday for September 2026, and the old July capture read "Tuesday July 21,
+2026", exactly six weeks earlier.
+
+**Build gotchas, all measured, all now in the Makefile comments:**
+- **`C:/msys64/mingw64/bin` MUST be on PATH; an absolute path to `gcc.exe` is
+  not a substitute.** Without it the Windows loader binds a foreign copy of one
+  of gcc's DLLs and `cc1.exe` dies with `STATUS_ENTRYPOINT_NOT_FOUND`
+  (0xC0000139) before printing anything - so `gcc -c hello.c` fails with exit 1
+  and ZERO output. `ldd` resolves everything fine and is not evidence, because
+  it does not use the loader's search order. Only a `.bat` file redirected to
+  disk surfaced the real NT status.
+- **Do NOT set `SHELL` to msys2's sh.** Under it, TMP/TEMP/TMPDIR are all empty
+  and gcc falls back to `C:\WINDOWS`, failing every compile. make's default Git
+  Bash sh has TMP=/tmp and a working `find`.
+- **This `make` cannot capture large `$(shell)` output.** `$(shell find ...)`
+  over LVGL's 463 files returns EMPTY (~25 KB), while the same piped to `wc -l`
+  returns 463 - it silently produced "rebuilding 0 objects". Enumeration now
+  happens inside the recipe shell.
+- **LVGL basenames are not unique** (`vg_lite_matrix.c` twice), so objects are
+  named from the full relative path, with a count check.
+- `lv_fs_posix.c` does not compile on mingw (`DT_DIR`); the sim conf uses
+  `LV_USE_FS_STDIO` on drive `A:` instead. The sim has its OWN `lv_conf.h`;
+  the device one is untouched.
+- The generated fonts include `"lvgl/lvgl.h"`, so the library's PARENT dir must
+  be on the include path.
+
+---
+
+### Demo videos for social media (asked for this session)
+
+`tools/make_demo_reel.py` (new): composites the REAL device captures in
+`img/argus/` into a watch bezel over a brand background, captions them with the
+two in-repo SIL OFL faces (Orbitron, VT323 - never a commercial font), and
+exports 1080x1920 (9:16), 1080x1350 (4:5) and 1920x1080 (16:9) plus a looping
+WebM and GIF for the README. Output to `artifacts/demo/` (untracked; committing
+video binaries into a firmware repo is Domenic's call). `ffmpeg` is at
+`/c/ffmpeg/ffmpeg-*-full_build/bin` and is NOT on PATH.
+
+**Asset audit - this is the blocker on publishing anything.** Every capture in
+`img/argus/` is dated 2026-07-21, i.e. BEFORE the rebrand (`23a7cd5`):
+
+- `config_1.png` shows the literal OLD product name in a text field. Excluded.
+- `radar.png` and `notify.png` render **tofu boxes** where `LV_SYMBOL_*` glyphs
+  failed on an ASCII-only brand-font label - the known font bug, visible in a
+  README image today. Excluded.
+- Several are empty states ("No messages yet", "No laps recorded"). Weak demo
+  material rather than defects.
+- The rest carry no brand string so they are safe, but they still show a July
+  build.
+
+So the reel currently shipping is a DRAFT built from the clean subset. Recapture
+off current firmware before publishing.
+
+**Claims policy in the script, deliberate:** it does not assert the Threat Radar
+tail verdict, and the detector scene carries a full-brightness "Field validation
+still pending" line. Given the correction above that is now over-cautious rather
+than wrong; update it to the Likely/Confirmed wording when the README is fixed.
+Red is never used as decoration (red = live threat on this watch).
+
+**Still to do: the firmware frame-dump mode** Domenic also asked for. Not
+started. It should reuse `src/screenshot.cpp` (`LV_USE_SNAPSHOT` already on) so
+flash cost is small, but a frame is 410x502x2 = ~402 KB and screenshot writes
+measure 100-300 ms, so SD bandwidth caps it around 3-5 fps. Usable for social
+video, but design around it rather than discovering it late.
+
+---
+
 ## >>> SESSION 2026-09-03: SLOW GPS ACQUISITION. LOG REVIEW. <<<
 
 Reported: "It took a very long time to get a signal. I did multiple tests."
